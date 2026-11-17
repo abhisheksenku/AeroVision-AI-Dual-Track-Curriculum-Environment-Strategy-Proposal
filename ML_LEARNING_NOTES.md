@@ -776,3 +776,37 @@ Downscaling the accumulator array by $4\times$ during accumulation and upscaling
   $$\text{Flow Rate} = \frac{\text{Unique Vehicles}}{\Delta t_{\text{seconds}}} \times 3600 \quad [\text{Vehicles / Hour}]$$
 - **95th Percentile ($P_{95}$)**:
   Speed value below which 95% of observations fall. Unlike the sample mean which is skewed by stopped cars or tracking leaps, $P_{95}$ is robust against outliers and accurately captures true high-speed violators.
+
+
+---
+
+# Module 9: Production Backend Architecture & Asynchronous Vision Pipelines
+
+---
+
+## 12. Scalable AI Web Services with FastAPI & SQLAlchemy 2.0
+
+### 12.1 The Asynchronous Video Processing Pattern
+High-resolution drone video inspection cannot be processed synchronously within an HTTP request:
+- Typical reverse proxies (NGINX, Cloudflare, AWS ALB) enforce request timeouts between 30 and 60 seconds.
+- A 120-frame video clip requires ~10-15 seconds of CPU inference; a 10-minute 4K clip requires 10+ minutes.
+- Synchronous processing blocks the web worker thread pool, causing denial-of-service for concurrent users.
+
+**Asynchronous Job Architecture**:
+1. **Client Submits File**: `POST /api/v1/jobs/upload` with `multipart/form-data`.
+2. **Immediate Persistence**: The server streams the video file to disk and writes a database record with state `QUEUED`.
+3. **Non-Blocking Acknowledgment**: Server responds with `HTTP 202 Accepted` and `{"job_id": "job_xxx"}` in $< 20\text{ ms}$.
+4. **Background Worker Execution**: The task is dispatched to a background thread pool (`BackgroundTasks`) or task queue (Celery/Redis).
+5. **State Machine Transitions**:
+   $$\text{QUEUED} \xrightarrow{\text{worker picks up}} \text{PROCESSING (updates progress \%)} \xrightarrow{\text{success}} \text{COMPLETED} \quad \text{or} \quad \text{FAILED}$$
+6. **Client Polling**: The frontend polls `GET /api/v1/jobs/{job_id}` at 1-2 second intervals to drive a live progress bar.
+
+### 12.2 Relational Data Modeling for Drone Surveillance
+- **`jobs` Table**: Tracks video filename, filesystem paths, processing state, frame counters, error logs, and timestamps.
+- **`mission_analytics` Table**: Stores high-level mission aggregates (total unique vehicles, duration, compliance status, class breakdown JSON).
+- **`violation_events` Table**: Relational child table storing discrete safety violation alerts with foreign key references to `jobs.job_id`, enabling indexed queries by severity (`CRITICAL`, `HIGH`, etc.).
+
+### 12.3 Pydantic v2 Contract Validation
+FastAPI utilizes Pydantic v2 (compiled with a Rust core engine) to enforce strict type schemas, automatic OpenAPI (Swagger) documentation generation, and serialization at microsecond latencies:
+- Input models validate payload structure, preventing malformed coordinates or negative altitude parameters from reaching internal pipelines (`HTTP 422 Unprocessable Entity`).
+- Response models filter internal database fields, preventing accidental leakage of sensitive system credentials or internal server paths.
