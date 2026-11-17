@@ -675,3 +675,64 @@ $$\text{GSD} = \frac{\text{Flight Altitude} \times \text{Sensor Pixel Pitch}}{\t
 - **mAP@50 vs mAP@[50:95]**:
   - $\text{mAP@50}$: Mean AP across all classes at IoU threshold $0.50$.
   - $\text{mAP@[50:95]}$: Mean AP averaged over 10 IoU thresholds ($0.50, 0.55, \dots, 0.95$). Evaluates both classification correctness and precise bounding box border localization.
+
+
+---
+
+# Module 7: Multi-Object Tracking with ByteTrack & Trajectory Analytics
+
+---
+
+## 10. Multi-Object Tracking (MOT) Foundations
+
+### 10.1 The MOT Pipeline: Tracking-by-Detection
+Modern computer vision systems solve object tracking via **Tracking-by-Detection**:
+$$\text{Raw Video Frame} \xrightarrow{\text{YOLO11}} \text{Detections } D_t \xrightarrow{\text{Data Association}} \text{Tracks } T_t \xrightarrow{\text{State Update}} \text{Kalman Filter}$$
+Instead of running expensive feature tracking across raw pixel spaces (e.g. Lucas-Kanade optical flow), the detector localizes objects per frame, and the tracker associates detections across consecutive frames to maintain persistent object identities.
+
+### 10.2 State Estimation via 2D Kalman Filter
+The Kalman filter estimates the true position and velocity of moving objects under Gaussian noise:
+- **State Vector $x$**:
+  $$x = [cx, cy, v_x, v_y]^T$$
+- **State Transition Equation**:
+  $$x_k = F x_{k-1} + w_{k-1}, \quad w \sim \mathcal{N}(0, Q)$$
+  Where $F = \begin{bmatrix} 1 & 0 & \Delta t & 0 \\ 0 & 1 & 0 & \Delta t \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix}$
+- **Measurement Model**:
+  $$z_k = H x_k + v_k, \quad v \sim \mathcal{N}(0, R)$$
+  Where $H = \begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \end{bmatrix}$
+- **Prediction Equations**:
+  $$\hat{x}_{k|k-1} = F \hat{x}_{k-1|k-1}$$
+  $$P_{k|k-1} = F P_{k-1|k-1} F^T + Q$$
+- **Measurement Update Equations**:
+  $$y_k = z_k - H \hat{x}_{k|k-1} \quad \text{(Innovation)}$$
+  $$S_k = H P_{k|k-1} H^T + R \quad \text{(Residual Covariance)}$$
+  $$K_k = P_{k|k-1} H^T S_k^{-1} \quad \text{(Optimal Kalman Gain)}$$
+  $$\hat{x}_{k|k} = \hat{x}_{k|k-1} + K_k y_k$$
+  $$P_{k|k} = (I - K_k H) P_{k|k-1}$$
+
+### 10.3 Bipartite Hungarian Matching
+Given $N$ existing active tracks and $M$ new detections:
+1. Construct the $N \times M$ cost matrix $C$ using spatial overlap:
+   $$C_{i, j} = 1.0 - \text{IoU}(\text{Track}_i, \text{Detection}_j)$$
+2. The Hungarian (Kuhn-Munkres) algorithm finds the global assignment minimizing total cost:
+   $$\min_{\pi} \sum_{i=1}^N C_{i, \pi(i)} \quad \text{in } \mathcal{O}(V^3) \text{ time}$$
+3. Assignments with $C_{i, j} > C_{\max}$ (or $\text{IoU} < \text{threshold}$) are rejected.
+
+### 10.4 The ByteTrack Algorithm & Occlusion Resilience
+Traditional tracking algorithms (SORT, DeepSORT) use a single hard confidence threshold (e.g., $0.50$). If an aerial vehicle passes through building shadows, tree cover, or motion blur, detector confidence drops to $0.35$, causing the tracker to lose the target and trigger an **ID Switch**.
+
+**ByteTrack's Two-Stage Hierarchy**:
+1. **Stage 1 (High-Confidence Matching)**:
+   - Match active tracks $T$ with high-score detections $D_{\text{high}} = \{d \in D \mid \text{conf}(d) \ge 0.60\}$ using IoU.
+2. **Stage 2 (Low-Confidence Occlusion Recovery)**:
+   - Take remaining unmatched tracks $T_{\text{unmatched}}$ and match them against low-score detections $D_{\text{low}} = \{d \in D \mid 0.10 \le \text{conf}(d) < 0.60\}$!
+   - Low-score detections are never used to initiate new tracks, eliminating false alarm hallucinations while seamlessly preserving continuity across occlusions.
+
+### 10.5 Virtual Tripwire Crossings & Directional Flow
+To detect when an object crosses a virtual perimeter or traffic counting line:
+- Let the tripwire line segment be $L = (Q_1, Q_2)$.
+- Let the object's movement between consecutive frames be segment $M = (P_{\text{prev}}, P_{\text{curr}})$.
+- Intersection is verified using the 2D Counter-Clockwise (CCW) orientation test:
+  $$\text{CCW}(A, B, C) = (C_y - A_y)(B_x - A_x) > (B_y - A_y)(C_x - A_x)$$
+  $$\text{Intersect} = (\text{CCW}(P_1, Q_1, Q_2) \ne \text{CCW}(P_2, Q_1, Q_2)) \land (\text{CCW}(P_1, P_2, Q_1) \ne \text{CCW}(P_1, P_2, Q_2))$$
+Crossed track IDs are recorded in a hash set to ensure each unique physical vehicle is counted exactly once.
