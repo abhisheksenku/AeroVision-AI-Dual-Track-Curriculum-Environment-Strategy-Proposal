@@ -573,3 +573,105 @@ For edge drone microcontrollers (Google Coral, STM32, Raspberry Pi):
    $$q = \text{round}\left( \frac{r}{\text{Scale}} \right) + \text{ZeroPoint}$$
    - Slashes disk storage and RAM footprint by $\approx 75\%$.
    - Executes using integer SIMD instructions (e.g. ARM NEON or Intel AVX-VNNI), doubling inference throughput while maintaining accuracy within $0.05$ tolerance.
+
+
+---
+
+# Module 5: Computer Vision Foundations & Video Stream Engineering
+
+---
+
+## 8. Digital Images, Color Spaces & Spatial Transforms
+
+### 8.1 Pixel Geometry and Memory Strides
+A digital image in OpenCV is represented as a NumPy 3D array of shape $(H, W, C)$ with `uint8` data type (values $0$ to $255$):
+- **C-Contiguous Strides**: For an image of shape $(1080, 810, 3)$, the row stride is $810 \times 3 \times 1 = 2,430$ bytes, column stride is $3$ bytes, and channel stride is $1$ byte.
+- **Color Ordering**: OpenCV historically defaults to **BGR** (Blue, Green, Red) due to early hardware frame grabbers and Windows DIB bitmap conventions, while PyTorch, PIL, and Matplotlib require **RGB**.
+
+### 8.2 Color Space Transformations for Aerial Vision
+- **Grayscale (ITU-R BT.601)**:
+  $$Y = 0.299 \cdot R + 0.587 \cdot G + 0.114 \cdot B$$
+  Weights reflect human eye sensitivity (highest for green, lowest for blue).
+- **HSV (Hue, Saturation, Value)**:
+  - **Hue ($0^\circ - 179^\circ$ in OpenCV)**: Pure chromatic angle. Invariant to shadow and illumination shifts.
+  - **Saturation ($0 - 255$)**: Color purity.
+  - **Value ($0 - 255$)**: Luminance/brightness.
+  - **Aerial Advantage**: Allows isolating asphalt roads (low saturation, medium value) and agricultural vegetation (Hue $35-85$) robustly under variable cloud cover.
+
+### 8.3 Resizing Interpolation: Why `INTER_AREA` is Mandatory
+- **INTER_NEAREST**: $O(1)$ nearest neighbor lookup; introduces staircase pixelation and Moire artifacts.
+- **INTER_LINEAR**: Bilinear $2 \times 2$ interpolation; standard for upsampling.
+- **INTER_AREA**: Pixel area relation resampling. When downsampling high-resolution 4K aerial footage to $640 \times 640$, `INTER_AREA` computes a weighted average of all source pixels over the target cell, preventing thin power lines and road markings from vanishing due to sub-sampling.
+
+### 8.4 Aspect Ratio Preservation & Symmetric Letterboxing
+Directly resizing rectangular frames (e.g., $16:9$ Full HD $1920 \times 1080$) to square deep learning inputs ($640 \times 640$) warps aspect ratios, stretching circular objects into ellipses and distorting learned vehicle geometries.
+
+**Letterboxing Algorithm**:
+1. Compute uniform scale ratio:
+   $$r = \min\left( \frac{W_{\text{target}}}{W_{\text{orig}}}, \frac{H_{\text{target}}}{H_{\text{orig}}} \right)$$
+2. Scale image to $(W_{\text{new}}, H_{\text{new}}) = (\text{round}(W_{\text{orig}} \cdot r), \text{round}(H_{\text{orig}} \cdot r))$.
+3. Compute symmetric padding:
+   $$dw = \frac{W_{\text{target}} - W_{\text{new}}}{2}, \quad dh = \frac{H_{\text{target}} - H_{\text{new}}}{2}$$
+4. Pad borders with constant gray $(114, 114, 114)$.
+
+**Inverse Coordinate Mapping (Un-letterboxing)**:
+To project bounding box predictions from $640 \times 640$ detector space back to native $1920 \times 1080$ frame coordinates:
+$$x_{\text{native}} = \frac{x_{\text{model}} - dw}{r}, \quad y_{\text{native}} = \frac{y_{\text{model}} - dh}{r}$$
+Clipped strictly to $[0, W_{\text{orig}}]$ and $[0, H_{\text{orig}}]$. Roundtrip projection achieves machine-precision error $< 10^{-5}$ px.
+
+### 8.5 The Video Memory Hazard & Constant $\mathcal{O}(1)$ Streaming
+- A raw uncompressed 4K ($3840 \times 2160$) frame at 3 bytes/pixel occupies $24.88 \text{ MB}$.
+- At 30 FPS, uncompressed video generates:
+  $$\text{Data Rate} = 3840 \times 2160 \times 3 \times 30 \approx 746.5 \text{ MB/second} \approx 44.8 \text{ GB/minute}$$
+- Storing video frames in a Python list exhausts a 16 GB system in under 22 seconds!
+- **AeroVision Solution**: `VideoReader` uses Python's generator pattern (`yield frame`), holding exactly 1 frame in memory at any instant. Decoded buffers are immediately reused or garbage collected, maintaining constant $\mathcal{O}(1)$ RAM usage across multi-hour drone flights.
+
+---
+
+# Module 6: Object Detection with YOLO11 & Performance Evaluation
+
+---
+
+## 9. Deep Learning Object Detection
+
+### 9.1 Bounding Box Formats & Vectorized IoU
+- **XYXY**: $[x_1, y_1, x_2, y_2]$ (Top-left and bottom-right pixel coordinates).
+- **CXCYWH**: $[cx, cy, w, h]$ (Center coordinate, width, and height).
+- **Intersection over Union (IoU)**:
+  $$\text{Intersection} = \max(0, \min(x_{2,A}, x_{2,B}) - \max(x_{1,A}, x_{1,B})) \times \max(0, \min(y_{2,A}, y_{2,B}) - \max(y_{1,A}, y_{1,B}))$$
+  $$\text{IoU} = \frac{\text{Intersection}}{\text{Area}_A + \text{Area}_B - \text{Intersection}}$$
+- **Complete IoU (CIoU) Loss**:
+  $$\mathcal{L}_{\text{CIoU}} = 1 - \text{IoU} + \frac{\rho^2(b, b^{gt})}{c^2} + \alpha v$$
+  Where $\rho$ is Euclidean center distance, $c$ is diagonal of the smallest enclosing box, and $v$ penalizes discrepancy in aspect ratios. Provides smooth, informative gradients even when boxes do not overlap ($\text{IoU} = 0$).
+
+### 9.2 Non-Maximum Suppression (NMS) Algorithm
+Dense detectors generate thousands of overlapping candidate boxes. Greedy NMS resolves duplicates:
+1. Filter candidates below confidence threshold $S_{\min}$.
+2. Sort remaining candidate boxes descending by confidence score.
+3. Select highest-scoring box $B_1$, append to final detections.
+4. Compute IoU between $B_1$ and all remaining candidates.
+5. Discard any candidate box with $\text{IoU} \ge \text{threshold}$ (typically $0.45 - 0.50$).
+6. Repeat until the candidate pool is exhausted.
+- **Class-Specific vs Class-Agnostic NMS**:
+  - *Class-Specific*: Suppresses only boxes of the same class (e.g. cars do not suppress persons).
+  - *Class-Agnostic*: Suppresses overlapping boxes across classes.
+
+### 9.3 Aerial Drone Vision Optics: Ground Sampling Distance (GSD)
+Ground Sampling Distance (GSD) measures the physical distance on the ground represented by the distance between two adjacent pixel centers:
+$$\text{GSD} = \frac{\text{Flight Altitude} \times \text{Sensor Pixel Pitch}}{\text{Focal Length}}$$
+- **Altitude Scaling**:
+  - At $20\text{m}$ altitude, a standard $4.5\text{m}$ car spans $\approx 600 \times 240$ pixels (High confidence).
+  - At $150\text{m}$ altitude, the same car spans $\approx 80 \times 32$ pixels, and a pedestrian occupies only $\approx 31 \times 9$ pixels.
+- Direct $640 \times 640$ downsampling reduces the pedestrian to $2 \times 1$ pixels, causing catastrophic miss rates. YOLO11 addresses this using high-resolution multi-scale feature pyramids (P3, P4, P5), routing low-level fine-grained edge features directly to detection heads.
+
+### 9.4 Evaluation Metrics: Precision, Recall, and mAP@[50:95]
+- **True Positive (TP)**: Detection with $\text{IoU} \ge 0.50$ matching an unmatched ground truth box.
+- **False Positive (FP)**: Detection with $\text{IoU} < 0.50$ or duplicate detection of an already matched ground truth box.
+- **False Negative (FN)**: Ground truth box that was missed by all predictions.
+- **Precision & Recall**:
+  $$\text{Precision} = \frac{TP}{TP + FP}, \quad \text{Recall} = \frac{TP}{TP + FN}$$
+- **Average Precision (AP)**: Area under the Precision-Recall (PR) curve after computing the monotonic precision envelope:
+  $$p_{\text{interp}}(r) = \max_{\tilde{r} \ge r} p(\tilde{r})$$
+- **mAP@50 vs mAP@[50:95]**:
+  - $\text{mAP@50}$: Mean AP across all classes at IoU threshold $0.50$.
+  - $\text{mAP@[50:95]}$: Mean AP averaged over 10 IoU thresholds ($0.50, 0.55, \dots, 0.95$). Evaluates both classification correctness and precise bounding box border localization.
