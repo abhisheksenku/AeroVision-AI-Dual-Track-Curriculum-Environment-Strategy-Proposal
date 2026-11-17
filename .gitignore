@@ -2,6 +2,7 @@
 
 # Python & Virtual Environments
 .venv/
+.venv_tf/
 .venv*/
 **/.venv*/
 venv/
