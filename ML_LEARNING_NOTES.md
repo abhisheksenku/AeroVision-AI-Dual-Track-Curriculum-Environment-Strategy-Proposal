@@ -21,16 +21,16 @@ The learning framework is structured into two complementary engineering tracks:
 ### Track A: PyTorch Learning Roadmap (Primary Platform Stack)
 | Module | Topic | Core Focus | AeroVision AI Mapping | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **PT-01** | Tensors & Tensor Operations | Shapes, strides, broadcasting, GPU/CPU transfers, tensor slicing | Base Data Structure | 🟢 Ready |
-| **PT-02** | Autograd & Computational Graphs | Dynamic computational graphs, `requires_grad`, backward pass | Gradient Engine | ⚪ Scheduled |
-| **PT-03** | Neural Networks from Scratch | `nn.Module`, `nn.Linear`, custom parameter initializations | Model Building | ⚪ Scheduled |
-| **PT-04** | Forward & Backward Propagation | Mathematical chain rule, gradient accumulation, `zero_grad()` | Training Dynamics | ⚪ Scheduled |
-| **PT-05** | Loss Functions & Optimizers | MSE, BCE, CrossEntropy, SGD vs AdamW, learning rate schedules | Optimization | ⚪ Scheduled |
-| **PT-06** | CNN Architecture | Convolutions, kernels, padding, stride, pooling, receptive fields | Vision Backbone | ⚪ Scheduled |
-| **PT-07** | Image Classification | Custom datasets, `DataLoader`, batching, training validation loop | Feature Classifier | ⚪ Scheduled |
-| **PT-08** | Transfer Learning & Fine-Tuning | Feature extraction vs full fine-tuning, freezing backbone layers | Domain Adaptation | ⚪ Scheduled |
-| **PT-09** | Model Evaluation & Profiling | Accuracy, Precision, Recall, Confusion Matrix, FLOPS, latency | Quality Assurance | ⚪ Scheduled |
-| **PT-10** | YOLO11 Architecture & Inference | Backbone, Neck (PAN-FPN), Decoupled Heads, Anchor-Free design | Core Detection Engine| ⚪ Scheduled |
+| **PT-01** | Tensors & Tensor Operations | Shapes, strides, broadcasting, GPU/CPU transfers, tensor slicing | Base Data Structure | ✅ Completed |
+| **PT-02** | Autograd & Computational Graphs | Dynamic computational graphs, `requires_grad`, backward pass | Gradient Engine | ✅ Completed |
+| **PT-03** | Neural Networks from Scratch | `nn.Module`, `nn.Linear`, custom parameter initializations | Model Building | ✅ Completed |
+| **PT-04** | Forward & Backward Propagation | Mathematical chain rule, gradient accumulation, `zero_grad()` | Training Dynamics | ✅ Completed |
+| **PT-05** | Loss Functions & Optimizers | MSE, BCE, CrossEntropy, SGD vs AdamW, learning rate schedules | Optimization | ✅ Completed |
+| **PT-06** | CNN Architecture | Convolutions, kernels, padding, stride, pooling, receptive fields | Vision Backbone | ✅ Completed |
+| **PT-07** | Image Classification | Custom datasets, `DataLoader`, batching, training validation loop | Feature Classifier | ✅ Completed |
+| **PT-08** | Transfer Learning & Fine-Tuning | Feature extraction vs full fine-tuning, freezing backbone layers | Domain Adaptation | ✅ Completed |
+| **PT-09** | Model Evaluation & Profiling | Accuracy, Precision, Recall, Confusion Matrix, FLOPS, latency | Quality Assurance | ✅ Completed |
+| **PT-10** | YOLO11 Architecture & Inference | Backbone, Neck (PAN-FPN), Decoupled Heads, Anchor-Free design | Core Detection Engine| ✅ Completed |
 
 ---
 
@@ -476,3 +476,60 @@ $$s(i) = \frac{b(i) - a(i)}{\max(a(i), b(i))} \in [-1, +1]$$
 > To ensure scale invariance, they defined a custom IoU distance metric:
 > $$d(\text{box}, \text{centroid}) = 1.0 - \text{IoU}(\text{box}, \text{centroid})$$
 > This ensured that a 20% relative size discrepancy produced the exact same distance penalty regardless of absolute pixel size."
+
+
+---
+
+# Module 3: Deep Learning with PyTorch & YOLO11 Architecture
+
+---
+
+## 6. PyTorch Deep Learning Mechanics & YOLO11 Deconstruction
+
+### 6.1 Tensor Strides & Memory Layout
+Every tensor in PyTorch is stored as a flat 1D buffer in physical RAM. Multi-dimensional access $(i, j, k)$ is determined by **Strides**:
+$$\text{Memory Offset} = \sum_{d=0}^{D-1} \text{index}_d \times \text{stride}_d$$
+- **Permutation**: Transposing or permuting dimensions swaps strides without moving data in RAM (`is_contiguous() == False`).
+- **Contiguity**: Calling `.view()` on a non-contiguous tensor throws a `RuntimeError`. Calling `.contiguous()` creates a newly aligned physical memory buffer, while `.reshape()` automatically creates a copy if necessary.
+- **Conversion**: OpenCV decodes video frames to NumPy arrays of shape $(H, W, C)$ in BGR. PyTorch requires $(B, C, H, W)$ in RGB. We transform this via:
+  ```python
+  torch_frame = torch.from_numpy(cv_frame).permute(2, 0, 1).unsqueeze(0).float() / 255.0
+  ```
+
+### 6.2 Autograd & The Dynamic Computational Graph
+PyTorch constructs a dynamic Directed Acyclic Graph (DAG) during the forward pass (*define-by-run*).
+- **Leaf Nodes**: Tensors created directly with `requires_grad=True` (e.g., model weights $\mathbf{W}, \mathbf{b}$).
+- **Non-Leaf Nodes**: Results of math operations containing a `grad_fn` pointer to backward gradient engines (e.g. `<AddBackward>`, `<Conv2DBackward>`).
+- **Gradient Accumulation**: `.backward()` accumulates onto `.grad` (`param.grad += new_grad`), enabling gradient accumulation over multiple mini-batches.
+- **Inference Mode**: `torch.inference_mode()` disables the graph completely, slashing RAM usage by $>50\%$ and accelerating CPU execution for real-time video streaming.
+
+### 6.3 Activation Mechanics: Linear Collapse & SiLU
+- **Proof of Linear Collapse**: Stacking multiple linear transformations without non-linearities collapses mathematically to a single effective weight matrix:
+  $$\mathbf{W}_3 (\mathbf{W}_2 (\mathbf{W}_1 \mathbf{x})) = (\mathbf{W}_3 \mathbf{W}_2 \mathbf{W}_1) \mathbf{x} = \mathbf{W}_{\text{eff}} \mathbf{x}$$
+- **SiLU (Swish)**: $x \cdot \sigma(x)$. Used in YOLO11 for smooth continuous derivatives, avoiding the sharp zero derivative of ReLU on negative inputs while self-regularizing small negative gradients.
+
+### 6.4 Adam vs AdamW: Decoupled Weight Decay
+- Standard Adam adds $L_2$ penalty $\lambda \theta$ directly to the gradient vector $g_t$. Because Adam normalizes by $\sqrt{v_t}$ (running second moment), parameters with large historical gradients have their weight decay artificially suppressed.
+- **AdamW** applies weight decay directly to the parameter update:
+  $$\theta_{t+1} = \theta_t - \alpha \lambda \theta_t - \frac{\alpha}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t$$
+  This restores true $L_2$ weight shrinkage independent of gradient scale, which is essential for Vision Transformers and YOLO fine-tuning.
+
+### 6.5 Convolution Spatial Dimensions & Receptive Fields
+- **Output Spatial Size**:
+  $$O = \left\lfloor \frac{W - K + 2P}{S} \right\rfloor + 1$$
+- **Receptive Field Propagation**:
+  $$RF_l = RF_{l-1} + (K_l - 1) \cdot J_{l-1}, \quad \text{where } J_l = J_{l-1} \cdot S_l$$
+  By Stage 5 (Stride 32), a single neuron aggregates visual context from a $99 \times 99$ pixel field.
+
+### 6.6 The YOLO11 Output Tensor Anatomy: `(1, 84, 8400)`
+Tracing an input frame of size $1 \times 3 \times 640 \times 640$ through `yolo11n.pt` yields a raw output of shape `[1, 84, 8400]`:
+1. **84 Channels**:
+   - $4$ coordinates: $[cx, cy, w, h]$
+   - $80$ class probability logits (COCO objects)
+2. **8400 Spatial Candidate Anchors**:
+   - P3 Head (Stride 8): $80 \times 80 = 6,400$ anchors (Small objects)
+   - P4 Head (Stride 16): $40 \times 40 = 1,600$ anchors (Medium objects)
+   - P5 Head (Stride 32): $20 \times 20 = 400$ anchors (Large objects)
+   - Total candidates: $6,400 + 1,600 + 400 = 8,400$
+3. **Anchor-Free Distribution Focal Loss (DFL)**:
+   YOLO11 eliminates predefined anchor aspect ratios. It predicts distance offsets $(l, t, r, b)$ from grid cell centers directly using discrete probability distributions, providing superior localization on small, noisy aerial objects.
