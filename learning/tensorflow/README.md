@@ -1,73 +1,61 @@
-# AeroVision AI – TensorFlow & Keras Learning Track
+# AeroVision AI – Phase 3: TensorFlow & Keras (Isolated Track)
 
-Welcome to the **TensorFlow & Keras Learning Track** of AeroVision AI.
+This directory (`learning/tensorflow/`) houses the complete 6-module curriculum for **Phase 3: TensorFlow and Keras**, running within the secondary isolated virtual environment (`.venv_tf`).
 
-While the core AeroVision AI platform is powered by PyTorch and Ultralytics YOLO11, this track provides comprehensive mastery over Google's **TensorFlow 2.16+ and Keras 3** framework, static graph optimization, and edge deployment via **TensorFlow Lite (TFLite)**.
+It is designed to give you complete dual-framework fluency (PyTorch + TensorFlow) and masters **TensorFlow Lite (TFLite) Edge Quantization** for ultra-low-power drone microcontrollers.
 
 ---
 
-## 1. Dual-Environment Management & Activation
+## Complete Module Index & Curriculum Mapping
 
-To ensure zero dependency conflicts and protect our PyTorch/YOLO11 setup, this track runs in an isolated virtual environment (`.venv_tf`).
+| Script | Topic & Key Focus | Core Engineering & Architectural Concept | Status |
+| :--- | :--- | :--- | :--- |
+| `01_tensor_basics.py` | TF Tensors & AutoDiff | `tf.constant`, `tf.Variable`, tensor ranks 0-4, broadcasting bounding boxes, `tf.GradientTape` auto-differentiation. | ✅ Verified |
+| `02_keras_neural_network.py` | Sequential vs Functional API | Directed Acyclic Graphs (DAGs), Multi-Input Multi-Output (MIMO) sensor fusion (flight dynamics + environmental streams). | ✅ Verified |
+| `03_cnn_image_classification.py` | CNNs & BHWC Memory Ordering | `Conv2D`, `BatchNormalization`, `MaxPooling2D`, residual skip connections (`layers.add`), GlobalAveragePooling2D vs Flatten. | ✅ Verified |
+| `04_model_training.py` | Model Training & Callbacks | `model.compile()`, `model.fit()`, `EarlyStopping(restore_best_weights=True)`, `ReduceLROnPlateau`, test accuracy 100%. | ✅ Verified |
+| `05_transfer_learning.py` | Transfer Learning & Freezing | Headless MobileNetV2, `base_model.trainable = False`, the `training=False` BatchNorm trap, 2-stage fine-tuning. | ✅ Verified |
+| `06_model_evaluation.py` | Edge Quantization & TFLite | Native Keras v3 `.keras`, FlatBuffer `.tflite` export, Post-Training Dynamic Range INT8 Quantization, and standalone `tf.lite.Interpreter`. | ✅ Verified |
 
-### Primary Environment (AeroVision Platform & PyTorch Track):
+---
+
+## Activation & Execution Instructions
+
+This module operates strictly within the dedicated `.venv_tf` environment:
+
 ```powershell
-# In PowerShell:
-.\.venv\Scripts\Activate.ps1
-
-# Direct Python Execution:
-.\.venv\Scripts\python.exe <script_path>
-```
-*Stack: Python 3.11.9, PyTorch 2.15 CPU, TorchVision, OpenCV 5.1, Ultralytics YOLO11, NumPy 2.4.6*
-
-### Secondary Environment (TensorFlow & Keras Track):
-```powershell
-# In PowerShell:
+# 1. Activate the secondary isolated TensorFlow virtual environment
 .\.venv_tf\Scripts\Activate.ps1
 
-# Direct Python Execution:
-.\.venv_tf\Scripts\python.exe <script_path>
+# 2. Run Module 01: TensorFlow Tensors & GradientTape
+python learning/tensorflow/01_tensor_basics.py
+
+# 3. Run Module 02: Keras Sequential vs Functional MIMO Architecture
+python learning/tensorflow/02_keras_neural_network.py
+
+# 4. Run Module 03: 2D Convolutions, ResNet Blocks & BHWC Memory Layout
+python learning/tensorflow/03_cnn_image_classification.py
+
+# 5. Run Module 04: Model Training, EarlyStopping & Learning Curves
+python learning/tensorflow/04_model_training.py
+
+# 6. Run Module 05: Transfer Learning & Layer Freezing
+python learning/tensorflow/05_transfer_learning.py
+
+# 7. Run Module 06: Model Persistence & TensorFlow Lite INT8 Quantization
+python learning/tensorflow/06_model_evaluation.py
 ```
-*Stack: Python 3.11.9, TensorFlow-CPU 2.16.1, Keras 3.15.1, NumPy 1.26.4*
 
 ---
 
-## 2. In-Depth Comparison: PyTorch vs TensorFlow / Keras
+## Architectural Comparison: PyTorch vs TensorFlow / Keras
 
-| Feature | PyTorch (AeroVision Core) | TensorFlow / Keras (This Track) |
+| Feature | PyTorch (AeroVision AI Platform) | TensorFlow / Keras (Isolated Track) |
 | :--- | :--- | :--- |
-| **Execution Model** | **Dynamic Eager Execution** (*define-by-run*). Graphs are constructed dynamically per forward pass. | **Hybrid**: Eager by default + Static Graph compilation via `@tf.function` / XLA. |
-| **Automatic Differentiation** | `loss.backward()` accumulates gradients directly into `tensor.grad`. | Context manager `with tf.GradientTape() as tape:` records operations explicitly. |
-| **Model Definition API** | Subclassing `torch.nn.Module` with explicit `forward()` methods. | Multi-tier: High-level `keras.Sequential`, graph-like `keras.Functional`, or `keras.Model` subclassing. |
-| **Data Ingestion Pipeline** | `torch.utils.data.Dataset` + `DataLoader` with Python workers. | `tf.data.Dataset` with C++ native streaming, prefetching (`AUTOTUNE`), and map parallelization. |
-| **Edge & Embedded Deployment** | TorchScript, ONNX Runtime, OpenVINO, TensorRT. | **TensorFlow Lite (TFLite)**, TFLite Micro (MCU), Coral Edge TPU. |
-| **Industry Standing** | Dominant in AI Research, Computer Vision (YOLO), Generative AI. | Dominant in Enterprise Production, Google Cloud Vertex AI, Embedded Edge systems. |
-
----
-
-## 3. Curriculum Syllabus
-
-| Script | Topic | Description | Status |
-| :--- | :--- | :--- | :--- |
-| **`01_tensor_basics.py`** | Tensor Operations & Math | Creation, indexing, slicing, broadcasting, linear algebra, NumPy interop | 🟢 Completed |
-| **`02_keras_neural_network.py`** | Keras Model Architecture | Sequential vs Functional APIs, Dense layers, activations, loss functions | ⚪ Next |
-| **`03_cnn_image_classification.py`** | CNNs & Feature Maps | `Conv2D`, `MaxPooling2D`, receptive fields, synthetic image classification | ⚪ Pending |
-| **`04_model_training.py`** | Training Loops & Callbacks | `model.fit()`, custom training loops with `GradientTape`, early stopping | ⚪ Pending |
-| **`05_transfer_learning.py`** | Transfer Learning & Fine-Tuning | Pretrained MobileNetV2, layer freezing, drone classification adaptation | ⚪ Pending |
-| **`06_model_evaluation.py`** | Evaluation, SavedModel & TFLite | Metrics, confusion matrices, model export, INT8 post-training quantization | ⚪ Pending |
-
----
-
-## 4. Key AI Engineer Interview Questions: PyTorch vs TensorFlow
-
-### Question 1: "How does gradient computation differ between PyTorch and TensorFlow?"
-> **Model Answer**:
-> - In **PyTorch**, autograd is deeply tied to tensor objects. Setting `requires_grad=True` on a tensor tracks all operations applied to it. Calling `loss.backward()` traverses the backward computational graph, populating `.grad` attributes on leaf tensors.
-> - In **TensorFlow**, automatic differentiation is handled by `tf.GradientTape`. Any operation performed within the `with tf.GradientTape() as tape:` block is recorded onto the tape. Gradients are then explicitly retrieved via `grads = tape.gradient(loss, model.trainable_variables)`. This makes gradient inspection and custom gradient modifications (such as gradient clipping or multi-loss weighting) explicit and modular.
-
-### Question 2: "Why is TensorFlow Lite (TFLite) frequently preferred for micro-edge drone microcontrollers?"
-> **Model Answer**:
-> "TFLite is designed specifically for resource-constrained embedded targets. It features:
-> 1. A tiny C++ runtime interpreter (<1 MB binary footprint compared to full PyTorch LibTorch at ~100MB+).
-> 2. Direct hardware acceleration delegation (NNAPI on Android, GPU delegates, Hexagon DSPs, and Edge TPUs).
-> 3. Native Post-Training Quantization (PTQ) converting FP32 weights to INT8 with minimal accuracy loss, reducing memory by 75% and enabling execution on low-power microcontrollers (e.g. flight controllers) without an operating system."
+| **Primary File Location** | Root & `backend/`, `learning/pytorch/` | `learning/tensorflow/` |
+| **Virtual Environment** | `.\.venv` (Python 3.11, PyTorch 2.15 CPU, NumPy 2.4) | `.\.venv_tf` (Python 3.11, TF-CPU 2.16.1, NumPy 1.26) |
+| **Execution Philosophy** | Dynamic graph (*define-by-run*) by default | Eager execution + `@tf.function` static graph tracing |
+| **Autodiff Engine** | `loss.backward()` accumulates on `.grad` | `with tf.GradientTape() as tape:` records graph |
+| **Image Tensor Ordering** | Channel-First: $(B, C, H, W)$ | Channel-Last: $(B, H, W, C)$ |
+| **Edge Deployment Target** | ONNX Runtime, OpenVINO, TorchScript | **TensorFlow Lite (TFLite)** FlatBuffers, Coral Edge TPU |
+| **Weight Quantization** | `torch.ao.quantization` (FX Graph / Eager) | `tf.lite.TFLiteConverter` Post-Training INT8 Quantization |

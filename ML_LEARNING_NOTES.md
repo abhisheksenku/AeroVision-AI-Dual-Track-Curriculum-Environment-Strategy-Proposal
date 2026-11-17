@@ -38,13 +38,13 @@ The learning framework is structured into two complementary engineering tracks:
 Located in `learning/tensorflow/`:
 | Script / Module | Topic | Core Focus | Engineering Value | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **01_tensor_basics.py** | TensorFlow Tensors & Ops | `tf.constant`, `tf.Variable`, indexing, broadcasting, tensor math | TF Data Layer | ⚪ Proposed |
-| **02_keras_neural_network.py** | Keras Sequential & Functional APIs | Dense layers, activations, model compilation, graph visualization | Architecture Design| ⚪ Proposed |
-| **03_cnn_image_classification.py** | CNNs in Keras | `Conv2D`, `MaxPooling2D`, `Flatten`, spatial feature maps | Vision Backbone | ⚪ Proposed |
-| **04_model_training.py** | Training, Validation & Testing | `model.fit()`, early stopping, model checkpoints, loss curves | Training Dynamics | ⚪ Proposed |
-| **05_transfer_learning.py** | Keras Applications (MobileNetV2) | Pretrained weights, frozen layers, fine-tuning classification head| Edge Adaptation | ⚪ Proposed |
-| **06_model_evaluation.py** | Evaluation, Saving & TFLite | `SavedModel` export, post-training quantization, TFLite converter | Edge Drone Compute | ⚪ Proposed |
-| **README.md** | Track Guide & PyTorch vs TF Guide | Side-by-side paradigm comparisons, execution models, trade-offs | Interview Mastery | ⚪ Proposed |
+| **01_tensor_basics.py** | TensorFlow Tensors & Ops | `tf.constant`, `tf.Variable`, indexing, broadcasting, tensor math | TF Data Layer | ✅ Completed |
+| **02_keras_neural_network.py** | Keras Sequential & Functional APIs | Dense layers, activations, model compilation, graph visualization | Architecture Design| ✅ Completed |
+| **03_cnn_image_classification.py** | CNNs in Keras | `Conv2D`, `MaxPooling2D`, `Flatten`, spatial feature maps | Vision Backbone | ✅ Completed |
+| **04_model_training.py** | Training, Validation & Testing | `model.fit()`, early stopping, model checkpoints, loss curves | Training Dynamics | ✅ Completed |
+| **05_transfer_learning.py** | Keras Applications (MobileNetV2) | Pretrained weights, frozen layers, fine-tuning classification head| Edge Adaptation | ✅ Completed |
+| **06_model_evaluation.py** | Evaluation, Saving & TFLite | `SavedModel` export, post-training quantization, TFLite converter | Edge Drone Compute | ✅ Completed |
+| **README.md** | Track Guide & PyTorch vs TF Guide | Side-by-side paradigm comparisons, execution models, trade-offs | Interview Mastery | ✅ Completed |
 
 ---
 
@@ -533,3 +533,43 @@ Tracing an input frame of size $1 \times 3 \times 640 \times 640$ through `yolo1
    - Total candidates: $6,400 + 1,600 + 400 = 8,400$
 3. **Anchor-Free Distribution Focal Loss (DFL)**:
    YOLO11 eliminates predefined anchor aspect ratios. It predicts distance offsets $(l, t, r, b)$ from grid cell centers directly using discrete probability distributions, providing superior localization on small, noisy aerial objects.
+
+
+---
+
+# Module 4: TensorFlow, Keras & Edge TFLite Quantization
+
+---
+
+## 7. TensorFlow & Keras Systems for Edge Drone Inference
+
+### 7.1 Keras APIs: Sequential vs Functional (MIMO Topologies)
+- **Sequential API**: Linear single-stream pipelines where each layer receives one input and emits one output.
+- **Functional API**: Expresses arbitrary Directed Acyclic Graphs (DAGs). Mandatory for:
+  1. Multi-Input Multi-Output (MIMO) sensor fusion (e.g., fusing flight dynamics and optical frames).
+  2. Residual skip connections ($y = F(x) + x$) via `layers.add([shortcut, residual])`.
+  3. Shared feature layers (Siamese networks).
+
+### 7.2 Memory Dimension Conventions: BHWC vs BCHW
+- **TensorFlow / Keras**: Channels-Last `(Batch, Height, Width, Channels: BHWC)`. Matches OpenCV default decoding order.
+- **PyTorch**: Channels-First `(Batch, Channels, Height, Width: BCHW)`. Optimizes cache locality for cuDNN and oneDNN planar convolution kernels.
+
+### 7.3 Advanced Keras Callbacks
+- `EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True)`: Prevents test degradation by automatically rewinding parameters to the epoch that achieved the global minimum validation loss.
+- `ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=2)`: Dynamically cuts learning rate by $50\%$ when loss plateaus, allowing the optimizer to descend into narrow, optimal loss basins.
+
+### 7.4 Transfer Learning: The BatchNorm Freeze Trap
+When freezing a pretrained backbone (`base_model.trainable = False`), you **must** call the model as:
+```python
+x = base_model(inputs, training=False)
+```
+If `training=False` is omitted, `BatchNormalization` layers continue updating their internal `running_mean` and `running_var` using the incoming mini-batch, corrupting pretrained normalization calibrations on small fine-tuning batches.
+
+### 7.5 TensorFlow Lite (TFLite) & Post-Training Quantization (PTQ)
+For edge drone microcontrollers (Google Coral, STM32, Raspberry Pi):
+1. **FlatBuffers Format**: `.tflite` files eliminate serialization/deserialization overhead; memory can be memory-mapped (`mmap`) directly in-place without copying into RAM.
+2. **Post-Training Dynamic Range Quantization**:
+   Transforms 32-bit floating point weights into 8-bit integers (`int8`):
+   $$q = \text{round}\left( \frac{r}{\text{Scale}} \right) + \text{ZeroPoint}$$
+   - Slashes disk storage and RAM footprint by $\approx 75\%$.
+   - Executes using integer SIMD instructions (e.g. ARM NEON or Intel AVX-VNNI), doubling inference throughput while maintaining accuracy within $0.05$ tolerance.

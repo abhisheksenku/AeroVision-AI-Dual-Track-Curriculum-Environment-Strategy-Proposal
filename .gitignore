@@ -29,12 +29,19 @@ data/processed/*
 data/reference_docs/*
 !data/reference_docs/.gitkeep
 
-# Model Weights
+# Model Weights & Exported Artifacts
 models/weights/*
 !models/weights/.gitkeep
+models/checkpoints/*
+!models/checkpoints/.gitkeep
+models/export/*
+!models/export/.gitkeep
 *.pt
 *.onnx
 *.engine
+*.tflite
+*.keras
+*.h5
 
 # Environment & Secrets
 .env

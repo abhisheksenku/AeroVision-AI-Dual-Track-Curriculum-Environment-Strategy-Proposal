@@ -140,6 +140,24 @@ Phase 2 developed the complete 10-module deep learning engineering suite in `lea
 
 ---
 
+## Phase 3: TensorFlow & Keras (Isolated Track) ✅ VERIFIED & COMPLETE
+
+### 1. Executive Summary
+Phase 3 completed the 6-module deep learning and edge deployment curriculum in `learning/tensorflow/`, executing within the secondary isolated `.venv_tf` environment (TensorFlow-CPU 2.16.1, Keras 3.15.1, NumPy 1.26.4). It establishes dual-framework fluency (PyTorch + TensorFlow) and covers Keras Sequential and Functional MIMO APIs, ResNet skip connections (`layers.add`), custom training callbacks, headless MobileNetV2 transfer learning, and **TensorFlow Lite (TFLite) FlatBuffer export with Post-Training INT8 Dynamic Range Quantization**.
+
+### 2. Verified Module Benchmarks
+
+| Module | Script | Core Deliverable | Key Benchmark / Verification Result | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **TF-01** | `01_tensor_basics.py` | Tensors, Broadcasting & GradientTape | Verified bounding box broadcasting; $d(\text{loss})/dw = 7.0$ via Autodiff. | ✅ Verified |
+| **TF-02** | `02_keras_neural_network.py` | Sequential vs Functional MIMO API | Fused 2 drone sensor streams; predicted multi-class risk and continuous Watts. | ✅ Verified |
+| **TF-03** | `03_cnn_image_classification.py` | 2D CNNs, ResNet & BHWC Format | Built ResNet blocks with `layers.add`; verified BHWC layout on 32x32 patches. | ✅ Verified |
+| **TF-04** | `04_model_training.py` | Callbacks & Dynamic Optimization | EarlyStopping stopped at epoch 11, restored best weights (epoch 6), 100% test acc. | ✅ Verified |
+| **TF-05** | `05_transfer_learning.py` | MobileNetV2 Freezing & Fine-Tuning | Slashed active parameters by 96.3%; demonstrated 2-stage fine-tuning. | ✅ Verified |
+| **TF-06** | `06_model_evaluation.py` | TFLite FlatBuffers & INT8 PTQ | Exported `.keras` & `.tflite`; INT8 quantized model verified with max error 0.0000. | ✅ Verified |
+
+---
+
 ### 7. Remaining Phases on Roadmap
 
 - [ ] **Phase 2: Computer Vision Detection MVP**
