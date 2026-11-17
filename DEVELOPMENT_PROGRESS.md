@@ -123,7 +123,10 @@ Executed via automated test script `backend/tests/verify_phase1.py`:
 
 ### 8. Dual-Track Learning Curriculum Integration
 
-- **Track A (PyTorch & Platform Vision)**: Integrated into `.venv` using Python 3.11, PyTorch 2.15 CPU, TorchVision 0.29, and Ultralytics YOLO11. Covers 10 progressive deep learning & vision subjects.
-- **Track B (TensorFlow & Keras Modules)**: Designed to live in `learning/tensorflow/` with 6 standalone runnable modules and a comprehensive guide covering tensors, Keras APIs, CNNs, transfer learning, and TFLite edge deployment.
-- **Environment Strategy**: An isolated secondary virtual environment (`.venv_tf`) is proposed to protect the primary `.venv`'s NumPy 2.x and PyTorch 2.15 CPU stack against TensorFlow's `numpy<2.0.0` dependency constraint.
+- **Track A (PyTorch & Platform Vision)**: Integrated into `.venv` using Python 3.11, PyTorch 2.15 CPU, TorchVision 0.29, and Ultralytics YOLO11. Covers 10 progressive deep learning & vision subjects. Verified 100% frozen and intact.
+- **Track B (TensorFlow & Keras Modules)**: Created in `learning/tensorflow/` with dedicated sandbox `.venv_tf` (Python 3.11, TensorFlow-CPU 2.16.1, Keras 3.15.1, NumPy 1.26.4).
+- **Environment Verification**:
+  - `01_tensor_basics.py` executed successfully in `.venv_tf` (Tensor ranks, broadcasting with drone bounding boxes, `tf.matmul`, `tf.reduce_mean`, and `tf.GradientTape` auto-differentiation).
+  - Both `.venv/` and `.venv_tf/` are isolated and excluded in `.gitignore`.
+
 
