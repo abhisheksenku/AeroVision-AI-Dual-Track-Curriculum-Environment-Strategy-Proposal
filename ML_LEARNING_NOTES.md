@@ -736,3 +736,43 @@ To detect when an object crosses a virtual perimeter or traffic counting line:
   $$\text{CCW}(A, B, C) = (C_y - A_y)(B_x - A_x) > (B_y - A_y)(C_x - A_x)$$
   $$\text{Intersect} = (\text{CCW}(P_1, Q_1, Q_2) \ne \text{CCW}(P_2, Q_1, Q_2)) \land (\text{CCW}(P_1, P_2, Q_1) \ne \text{CCW}(P_1, P_2, Q_2))$$
 Crossed track IDs are recorded in a hash set to ensure each unique physical vehicle is counted exactly once.
+
+
+---
+
+# Module 8: Drone Trajectory Analytics, Ray-Casting & Security Rules
+
+---
+
+## 11. Spatial Intelligence & Security Compliance Systems
+
+### 11.1 Time-Series Trajectory Smoothing (EMA)
+Raw tracker bounding box centroids exhibit high-frequency detector jitter due to lighting shifts, camera vibration, and aspect ratio alterations:
+$$S_t = \alpha Y_t + (1 - \alpha) S_{t-1}$$
+Choosing $\alpha = 0.35$ preserves true vehicle turning dynamics while suppressing single-frame jitter, reducing artificial speed spikes by over $80\%$.
+
+### 11.2 Heading Angle Calculation
+The instantaneous direction of travel is computed from consecutive smoothed points $(x_t, y_t)$:
+$$\theta = \arctan2(\Delta x, -\Delta y) \pmod{360^\circ}$$
+Because computer vision image coordinates define $+Y$ downward, $-\Delta y$ maps the vertical coordinate to positive Cartesian North, yielding true compass bearings ($0^\circ = \text{North}, 90^\circ = \text{East}, 180^\circ = \text{South}, 270^\circ = \text{West}$).
+
+### 11.3 Ray-Casting Point-in-Polygon (PIP) Algorithm
+To monitor restricted flight sectors, landing pads, and pedestrian sidewalks:
+- **Jordan Curve Theorem**: A point lies inside a simple polygon if and only if a ray originating from the point crosses the polygon boundary an odd number of times.
+- **Edge Intersection Test**:
+  For an edge with endpoints $(P_1, P_2)$, a horizontal ray from test point $(x, y)$ intersects the edge if:
+  $$\min(P_{1,y}, P_{2,y}) < y \le \max(P_{1,y}, P_{2,y}) \quad \text{and} \quad x \le x_{\text{inters}}$$
+  Where the intersection coordinate is:
+  $$x_{\text{inters}} = \frac{(y - P_{1,y})(P_{2,x} - P_{1,x})}{P_{2,y} - P_{1,y}} + P_{1,x}$$
+Time complexity is $\mathcal{O}(N)$ where $N$ is the number of polygon vertices, executing in under $2\ \mu\text{s}$ per point on modern CPUs.
+
+### 11.4 2D Gaussian Kernel Density Estimation (KDE)
+Instead of rigid grid binning which creates blocky boundary artifacts, spatial congestion is estimated as a continuous probability density surface:
+$$\text{Density}(x, y) = \sum_{i=1}^{M} \frac{1}{2\pi \sigma^2} \exp\left( -\frac{(x - x_i)^2 + (y - y_i)^2}{2\sigma^2} \right)$$
+Downscaling the accumulator array by $4\times$ during accumulation and upscaling via bilinear interpolation provides real-time CPU rendering at over $100\text{ FPS}$.
+
+### 11.5 Traffic Flow Rate & Percentile Metrics
+- **Hourly Flow Rate**:
+  $$\text{Flow Rate} = \frac{\text{Unique Vehicles}}{\Delta t_{\text{seconds}}} \times 3600 \quad [\text{Vehicles / Hour}]$$
+- **95th Percentile ($P_{95}$)**:
+  Speed value below which 95% of observations fall. Unlike the sample mean which is skewed by stopped cars or tracking leaps, $P_{95}$ is robust against outliers and accurately captures true high-speed violators.
