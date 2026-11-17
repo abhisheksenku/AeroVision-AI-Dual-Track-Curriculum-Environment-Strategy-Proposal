@@ -810,3 +810,37 @@ High-resolution drone video inspection cannot be processed synchronously within 
 FastAPI utilizes Pydantic v2 (compiled with a Rust core engine) to enforce strict type schemas, automatic OpenAPI (Swagger) documentation generation, and serialization at microsecond latencies:
 - Input models validate payload structure, preventing malformed coordinates or negative altitude parameters from reaching internal pipelines (`HTTP 422 Unprocessable Entity`).
 - Response models filter internal database fields, preventing accidental leakage of sensitive system credentials or internal server paths.
+
+
+---
+
+# Module 10: Frontend Engineering, Data Visualization & Real-Time Telemetry
+
+---
+
+## 13. High-Performance Web Dashboards for AI Vision Telemetry
+
+### 13.1 React Polling State Machines vs WebSockets
+When synchronizing long-running AI video pipelines with frontend browser clients, selecting the appropriate communication paradigm is critical:
+- **WebSockets / Server-Sent Events (SSE)**: Ideal for sub-second, bidirectional streaming updates (e.g., live frame-by-frame bounding box coords at 30 FPS). However, they require persistent socket connections, stateful load-balancing infrastructure, and complex reconnection backoff logic.
+- **Asynchronous Polling State Machine**: Ideal for batch-oriented video processing jobs ($10\text{s} - 10\text{min}$). The client triggers a job, receives a unique `job_id`, and initiates an interval-based polling query (`GET /api/v1/jobs/{job_id}`) at $1.0\text{s} - 2.0\text{s}$ periods:
+  - **Terminal Conditions**: When the job reaches `COMPLETED` or `FAILED`, the polling timer is immediately cleared via `window.clearInterval()`, stopping all outbound network requests.
+  - **Exponential Backoff**: If network errors occur, interval delays scale exponentially ($t_{next} = \min(t \times 1.5, t_{max})$) to prevent hammering a recovering server.
+
+### 13.2 Coordinate Space Transformation for Overlays
+Aerial video feeds arrive at varying native resolutions (e.g., $1920 \times 1080$, $3840 \times 2160$), whereas responsive web viewports dynamically change dimensions depending on user display scaling.
+
+To accurately render bounding boxes $[x_{\min}, y_{\min}, x_{\max}, y_{\max}]$ and trajectory paths onto a canvas overlay without spatial distortion:
+1. **Aspect Ratio Preservation (Letterboxing)**:
+   $$\text{scale} = \min\left( \frac{W_{\text{display}}}{W_{\text{native}}}, \frac{H_{\text{display}}}{H_{\text{native}}} \right)$$
+2. **Offset Computation**:
+   $$\text{offset}_x = \frac{W_{\text{display}} - (W_{\text{native}} \times \text{scale})}{2}, \quad \text{offset}_y = \frac{H_{\text{display}} - (H_{\text{native}} \times \text{scale})}{2}$$
+3. **Canvas Point Mapping**:
+   $$x_{\text{canvas}} = (x_{\text{native}} \times \text{scale}) + \text{offset}_x, \quad y_{\text{canvas}} = (y_{\text{native}} \times \text{scale}) + \text{offset}_y$$
+
+### 13.3 Declarative Telemetry Visualization with Recharts
+FastAPI returns nested analytical payloads containing categorical distributions and time-series velocities. Frontend visualization requires declarative adaptation:
+- **Categorical Aggregation**: Transforming `{ "car": 45, "truck": 12 }` into array-of-objects schemas: `[{ name: 'CAR', count: 45 }, { name: 'TRUCK', count: 12 }]` for Recharts `BarChart`.
+- **Comparative Metrics**: Normalizing mean velocity vs 95th-percentile peak velocity onto dual-bar charts to immediately expose reckless driving or speed limit exceedances.
+- **Hierarchical Safety Auditing**: Partitioning violation events by severity (`CRITICAL` vs `WARNING`) for donut-chart representation with color-coded alerts matching ISO/IEC safety conventions.
+
