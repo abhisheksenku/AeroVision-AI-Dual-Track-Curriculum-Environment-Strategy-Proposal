@@ -358,3 +358,121 @@ Write a Python function `compute_iou(boxA, boxB)` that takes two bounding boxes 
 
 ### Exercise 1.3 (Interview Scenario)
 An autonomous drone operates an edge computer with an 8-bit integer inference accelerator (NPU). A teammate proposes running a 7B parameter multimodal vision-language model onboard to detect people trapped in floods in real-time at 30 FPS. Explain the engineering flaws with this proposal and state what architecture you would deploy instead.
+
+
+---
+
+# Module 2: Non-Linear Partitioning, Ensembles & Clustering
+
+---
+
+## 4. Decision Trees, Random Forests and Ensemble Learning
+
+### 4.1 Non-Linear Spatial Partitioning
+While linear models (Linear & Logistic Regression) seek a single continuous hyperplane $\mathbf{w}^T \mathbf{x} + b = 0$ to separate classes, decision trees partition feature space into a set of orthogonal rectangular hypercubes through recursive binary splits:
+
+$$\mathcal{R}_m(j, s) = \{X \mid X_j \le s\} \quad \text{and} \quad \mathcal{R}_{m+1}(j, s) = \{X \mid X_j > s\}$$
+
+At each region, the tree predicts a constant value:
+- For Classification: The majority class $\arg\max_c p_{mc}$
+- For Regression: The mean target value $\bar{y}_m = \frac{1}{|R_m|} \sum_{i \in R_m} y_i$
+
+### 4.2 Mathematical Impurity Metrics
+
+#### Gini Impurity (Default for CART):
+$$\text{Gini}(D) = 1 - \sum_{c=1}^C p_c^2$$
+Where $p_c$ is the fraction of items assigned to class $c$.
+- Maximum purity (all elements belong to one class): $\text{Gini} = 0.0$
+- Maximum impurity (uniform distribution across $C$ classes): $\text{Gini} = 1 - \frac{1}{C}$
+
+#### Shannon Entropy:
+$$H(D) = - \sum_{c=1}^C p_c \log_2(p_c)$$
+Measures information uncertainty in bits ($0 \log 0 \equiv 0$).
+
+#### Information Gain (Splitting Criterion):
+$$IG(D, j, s) = \text{Impurity}(D) - \left[ \frac{|D_{\text{left}}|}{|D|} \text{Impurity}(D_{\text{left}}) + \frac{|D_{\text{right}}|}{|D|} \text{Impurity}(D_{\text{right}}) \right]$$
+The tree recursively selects the feature $j^*$ and threshold $s^*$ that maximizes Information Gain.
+
+### 4.3 Overfitting, Variance and Ensemble Learning
+An unconstrained decision tree will split until every leaf node contains exactly 1 sample ($\text{Gini} = 0$). This causes:
+- **Zero Training Bias**: The tree memorizes every training sample, including sensor noise and outliers.
+- **High Variance**: Small perturbations in training data yield radically different tree structures and catastrophic test errors.
+
+#### The Bagging Solution (Random Forests):
+Leo Breiman's Random Forest mitigates variance by combining two decorrelation techniques:
+1. **Bootstrap Aggregation (Row Bagging)**: Draw $B$ random samples of size $N$ with replacement. Train an independent tree $T_b$ on each bootstrap replicate.
+2. **Feature Bagging (Random Subspace)**: At each candidate split, evaluate only a random subset of $m \approx \sqrt{D}$ features. This prevents globally dominant features from being selected as the root of every tree, decorrelating the ensemble members.
+
+The variance of an average of $B$ identically distributed trees with pairwise correlation $\rho$ is:
+$$\text{Var}(\bar{T}) = \rho \sigma^2 + \frac{1 - \rho}{B} \sigma^2$$
+As $B \to \infty$, the second term $\frac{1-\rho}{B} \sigma^2 \to 0$. By forcing $\rho$ down through feature bagging, Random Forest drives total model variance down without increasing individual tree bias.
+
+### 4.4 Mean Decrease in Impurity (Feature Importance)
+For any feature $X_j$, its importance across a forest is the total impurity reduction it achieves, weighted by the sample proportion reaching those splits, averaged across all $B$ trees:
+$$\text{MDI}(X_j) = \frac{1}{B} \sum_{b=1}^B \sum_{t \in T_b: v(s_t) = j} p(t) \cdot \Delta I(s_t, t)$$
+
+### 4.5 Why CNNs Replaced Decision Trees for Raw Imagery
+| Dimension | Decision Trees / Random Forests | Convolutional Neural Networks (CNNs) |
+| :--- | :--- | :--- |
+| **Input Structure** | 1D Tabular / Flattened feature vectors | Multi-channel 2D/3D pixel tensors $\mathbb{R}^{H \times W \times C}$ |
+| **Spatial Coherence** | Treats pixels at $(0, 0)$ and $(0, 1)$ as unrelated independent features | 2D kernels preserve spatial locality and neighborhood context |
+| **Translation Invariance** | Zero invariance (a car shifted by 5 pixels activates totally different nodes) | Shift/translation equivariance via weight sharing and spatial pooling |
+| **Feature Extraction** | Evaluates raw pixel thresholds ($X_{i, j} \le 128$) without learning intermediate representations | Hierarchical abstraction: edges $\to$ textures $\to$ object parts $\to$ whole objects |
+| **Scalability** | Struggles with 1,000,000+ continuous pixel inputs (curse of dimensionality) | Parameter sharing allows 2.6M parameters in YOLO11n to process arbitrary frame sizes |
+
+---
+
+## 5. K-Means Clustering & Unsupervised Spatial Intelligence
+
+### 5.1 The Unsupervised Paradigm
+In supervised learning, every input $x$ is paired with a target $y$. In unsupervised learning, the model receives only unlabeled features $X = \{x^{(1)}, \dots, x^{(N)}\}$ and must discover intrinsic geometry, clusters, or manifolds.
+
+In AeroVision AI, unsupervised clustering powers:
+1. **Spatial Hotspot Discovery**: Grouping thousands of detected drone inspection faults into localized maintenance hubs.
+2. **Trajectory Flow Analysis**: Grouping continuous $[\Delta x, \Delta y]$ motion vectors from ByteTrack into distinct traffic flows (Northbound, Southbound, Left Turn).
+3. **Historical Anchor Box Priors**: How YOLOv2 through YOLOv7 generated bounding box priors using IoU-distance K-Means.
+
+### 5.2 Mathematical Formulation of K-Means
+Given $N$ points and target $K$ clusters, find centroids $\mathbf{\mu} = \{\mu_1, \dots, \mu_K\}$ and assignments $S = \{S_1, \dots, S_K\}$ that minimize Within-Cluster Sum of Squares (Inertia):
+$$J(S, \mathbf{\mu}) = \sum_{k=1}^K \sum_{x \in S_k} \| x - \mu_k \|_2^2$$
+
+#### Lloyd's Alternating Optimization Algorithm:
+1. **Initialization**: Select $K$ initial centroids $\mu_1^{(0)}, \dots, \mu_K^{(0)}$.
+2. **Expectation (Assignment Step)**: Assign each point $x^{(i)}$ to its closest centroid:
+   $$c^{(i)} = \arg\min_{k \in \{1, \dots, K\}} \| x^{(i)} - \mu_k^{(t)} \|^2$$
+3. **Maximization (Update Step)**: Recompute centroids as the mean of assigned points:
+   $$\mu_k^{(t+1)} = \frac{1}{|S_k^{(t)}|} \sum_{i \in S_k^{(t)}} x^{(i)}$$
+4. **Convergence**: Repeat steps 2 and 3 until $\|\mu^{(t+1)} - \mu^{(t)}\| < \epsilon$ or maximum iterations reached.
+
+### 5.3 K-Means++ Smart Seeding
+Standard random initialization risks getting trapped in poor local minima when two centroids are placed in the same cluster. 
+Arthur & Vassilvitskii's **K-Means++** guarantees an $\mathcal{O}(\log K)$ approximation bound:
+1. Choose first centroid $\mu_1$ uniformly at random from dataset $X$.
+2. Compute distance $D(x)$ from each point $x$ to the nearest already-selected centroid.
+3. Select next centroid $\mu_k$ with probability proportional to squared distance:
+   $$P(x) = \frac{D(x)^2}{\sum_{x' \in X} D(x')^2}$$
+4. Repeat steps 2-3 until all $K$ centroids are chosen.
+
+### 5.4 Finding Optimal K: Elbow Method & Silhouette Analysis
+
+#### The Elbow Method:
+Plot Inertia $J(K)$ against $K \in [1, \dots, K_{\max}]$. As $K$ increases, Inertia always decreases (reaching $0$ when $K=N$). Look for the **inflection point** ("elbow") where marginal reduction in error drops sharply.
+
+#### The Silhouette Coefficient:
+For sample $i$ in cluster $A$:
+- $a(i)$: Mean distance between $i$ and all other points in cluster $A$ (Intra-cluster cohesion).
+- $b(i)$: Mean distance between $i$ and all points in the nearest neighbor cluster $B$ (Inter-cluster separation).
+$$s(i) = \frac{b(i) - a(i)}{\max(a(i), b(i))} \in [-1, +1]$$
+- $s(i) \approx +1$: Sample is well clustered and far from neighboring clusters.
+- $s(i) \approx 0$: Sample lies on the decision boundary between two clusters.
+- $s(i) < 0$: Sample is closer to a neighboring cluster than its own (misclustered).
+
+### 5.5 Interview Questions & Model Answers
+
+**Q: "How did YOLO historically use K-Means for Anchor Box optimization, and why did they not use standard Euclidean distance?"**
+> **Model Answer**: "In YOLOv2 through YOLOv7, anchor boxes were predefined bounding box templates used by the regression head.
+> Instead of manually selecting box sizes, the authors ran K-Means clustering on the dimensions $[w_i, h_i]$ of all ground truth boxes in the dataset.
+> If standard Euclidean distance $d(box, centroid) = (w - w_c)^2 + (h - h_c)^2$ were used, large bounding boxes (e.g., $400 \times 300$ px trucks) would generate exponentially larger distance errors than small boxes (e.g., $20 \times 15$ px pedestrians), biasing all anchor priors toward large objects.
+> To ensure scale invariance, they defined a custom IoU distance metric:
+> $$d(\text{box}, \text{centroid}) = 1.0 - \text{IoU}(\text{box}, \text{centroid})$$
+> This ensured that a 20% relative size discrepancy produced the exact same distance penalty regardless of absolute pixel size."
