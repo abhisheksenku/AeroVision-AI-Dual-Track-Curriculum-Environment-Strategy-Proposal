@@ -118,3 +118,12 @@ Executed via automated test script `backend/tests/verify_phase1.py`:
 - [ ] **Phase 6: LangGraph AI Agent & Qdrant RAG**
   - Gemini LLM integration, tool routing, document grounding.
 - [ ] **Phase 7: Docker Containerization, Automated Tests & Hardening**
+
+---
+
+### 8. Dual-Track Learning Curriculum Integration
+
+- **Track A (PyTorch & Platform Vision)**: Integrated into `.venv` using Python 3.11, PyTorch 2.15 CPU, TorchVision 0.29, and Ultralytics YOLO11. Covers 10 progressive deep learning & vision subjects.
+- **Track B (TensorFlow & Keras Modules)**: Designed to live in `learning/tensorflow/` with 6 standalone runnable modules and a comprehensive guide covering tensors, Keras APIs, CNNs, transfer learning, and TFLite edge deployment.
+- **Environment Strategy**: An isolated secondary virtual environment (`.venv_tf`) is proposed to protect the primary `.venv`'s NumPy 2.x and PyTorch 2.15 CPU stack against TensorFlow's `numpy<2.0.0` dependency constraint.
+

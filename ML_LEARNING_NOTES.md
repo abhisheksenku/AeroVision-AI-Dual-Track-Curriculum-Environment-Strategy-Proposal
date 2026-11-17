@@ -12,23 +12,53 @@ This document serves as your living knowledge repository. Every concept is broke
 
 ---
 
-## Complete Curriculum Roadmap
+## Dual-Track Complete Curriculum Roadmap
 
-| Module | Core Subjects | Mapping to AeroVision AI Phase | Status |
-| :--- | :--- | :--- | :--- |
-| **Module 1** | AI vs ML vs DL vs GenAI; Supervised / Unsupervised / RL; Regression vs Classification | Phase 1 Foundation | 🟢 Active |
-| **Module 2** | Train / Val / Test Splits; Data Leakage; Feature Engineering vs Feature Extraction | Phase 2 CV Ingestion | 🟡 Next |
-| **Module 3** | Classical ML: Linear/Logistic Regression, Decision Trees, Random Forests, K-Means | Phase 2-3 Evaluation | ⚪ Pending |
-| **Module 4** | Neural Networks from Scratch: Neurons, Layers, Activations, Loss Functions | Phase 2 Deep Learning | ⚪ Pending |
-| **Module 5** | Optimization: Forward/Backpropagation, Gradient Descent Variants, Adam, Schedulers | Phase 2 Optimization | ⚪ Pending |
-| **Module 6** | CNNs: Convolutions, Kernels, Padding, Stride, Pooling, Receptive Field | Phase 2 Vision Backbone | ⚪ Pending |
-| **Module 7** | Object Detection Foundations: Bounding Boxes, IoU, Anchor Boxes vs Anchor-Free, NMS | Phase 2-3 Detection | ⚪ Pending |
-| **Module 8** | Modern Object Detectors: YOLO Evolution (YOLOv1 to YOLO11 Architecture & Heads) | Phase 2-3 Detection | ⚪ Pending |
-| **Module 9** | Multi-Object Tracking: Kalman Filters, Hungarian Algorithm, ByteTrack vs DeepSORT | Phase 3 Tracking | ⚪ Pending |
-| **Module 10**| Evaluation Metrics: Precision, Recall, PR Curves, mAP@50, mAP@50:95, MOTA, IDF1 | Phase 3 Evaluation | ⚪ Pending |
-| **Module 11**| Transformers & Vision Transformers (ViT, Cross-Attention, Positional Encoding) | Phase 6 Agent/RAG | ⚪ Pending |
-| **Module 12**| Generative AI, RAG & Autonomous Agents: Vector Embeddings, Qdrant, LangGraph | Phase 6 AI Agent | ⚪ Pending |
-| **Module 13**| Production AI: Quantization (INT8/FP16), TensorRT/OpenVINO, Latency Profiling | Phase 7 Deployment | ⚪ Pending |
+The learning framework is structured into two complementary engineering tracks:
+- **Track A (PyTorch & Modern Computer Vision)**: Powers the AeroVision AI production platform, YOLO11, and our deep learning inference pipeline. Operates in `.venv`.
+- **Track B (TensorFlow, Keras & Edge Deployment)**: Teaches static graph concepts, Keras Sequential/Functional APIs, SavedModel, and TensorFlow Lite deployment for micro-edge compute. Operates in an isolated `.venv_tf`.
+
+### Track A: PyTorch Learning Roadmap (Primary Platform Stack)
+| Module | Topic | Core Focus | AeroVision AI Mapping | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **PT-01** | Tensors & Tensor Operations | Shapes, strides, broadcasting, GPU/CPU transfers, tensor slicing | Base Data Structure | 🟢 Ready |
+| **PT-02** | Autograd & Computational Graphs | Dynamic computational graphs, `requires_grad`, backward pass | Gradient Engine | ⚪ Scheduled |
+| **PT-03** | Neural Networks from Scratch | `nn.Module`, `nn.Linear`, custom parameter initializations | Model Building | ⚪ Scheduled |
+| **PT-04** | Forward & Backward Propagation | Mathematical chain rule, gradient accumulation, `zero_grad()` | Training Dynamics | ⚪ Scheduled |
+| **PT-05** | Loss Functions & Optimizers | MSE, BCE, CrossEntropy, SGD vs AdamW, learning rate schedules | Optimization | ⚪ Scheduled |
+| **PT-06** | CNN Architecture | Convolutions, kernels, padding, stride, pooling, receptive fields | Vision Backbone | ⚪ Scheduled |
+| **PT-07** | Image Classification | Custom datasets, `DataLoader`, batching, training validation loop | Feature Classifier | ⚪ Scheduled |
+| **PT-08** | Transfer Learning & Fine-Tuning | Feature extraction vs full fine-tuning, freezing backbone layers | Domain Adaptation | ⚪ Scheduled |
+| **PT-09** | Model Evaluation & Profiling | Accuracy, Precision, Recall, Confusion Matrix, FLOPS, latency | Quality Assurance | ⚪ Scheduled |
+| **PT-10** | YOLO11 Architecture & Inference | Backbone, Neck (PAN-FPN), Decoupled Heads, Anchor-Free design | Core Detection Engine| ⚪ Scheduled |
+
+---
+
+### Track B: TensorFlow / Keras Learning Roadmap (Isolated Learning Module)
+Located in `learning/tensorflow/`:
+| Script / Module | Topic | Core Focus | Engineering Value | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **01_tensor_basics.py** | TensorFlow Tensors & Ops | `tf.constant`, `tf.Variable`, indexing, broadcasting, tensor math | TF Data Layer | ⚪ Proposed |
+| **02_keras_neural_network.py** | Keras Sequential & Functional APIs | Dense layers, activations, model compilation, graph visualization | Architecture Design| ⚪ Proposed |
+| **03_cnn_image_classification.py** | CNNs in Keras | `Conv2D`, `MaxPooling2D`, `Flatten`, spatial feature maps | Vision Backbone | ⚪ Proposed |
+| **04_model_training.py** | Training, Validation & Testing | `model.fit()`, early stopping, model checkpoints, loss curves | Training Dynamics | ⚪ Proposed |
+| **05_transfer_learning.py** | Keras Applications (MobileNetV2) | Pretrained weights, frozen layers, fine-tuning classification head| Edge Adaptation | ⚪ Proposed |
+| **06_model_evaluation.py** | Evaluation, Saving & TFLite | `SavedModel` export, post-training quantization, TFLite converter | Edge Drone Compute | ⚪ Proposed |
+| **README.md** | Track Guide & PyTorch vs TF Guide | Side-by-side paradigm comparisons, execution models, trade-offs | Interview Mastery | ⚪ Proposed |
+
+---
+
+### High-Level Comparison: PyTorch vs TensorFlow / Keras
+
+| Feature | PyTorch (AeroVision Core) | TensorFlow / Keras (Isolated Track) |
+| :--- | :--- | :--- |
+| **Execution Model** | Dynamic graph (Eager by default, *define-by-run*) | Dynamic eager execution + Static graph compilation via `@tf.function` |
+| **Autodiff Mechanism** | `loss.backward()` accumulates on `param.grad` | `with tf.GradientTape() as tape:` records forward ops |
+| **API Philosophy** | Object-oriented Pythonic inheritance (`nn.Module`) | Multi-tier: Rapid prototyping (Keras) + Low-level ops (`tf.raw_ops`) |
+| **Dominance in Industry** | Leading in AI research, Computer Vision, Ultralytics, HuggingFace | Leading in production enterprise pipelines, Google Cloud, TF Serving, mobile (TFLite) |
+| **Edge Deployment** | TorchScript, ONNX Runtime, OpenVINO, TensorRT | TensorFlow Lite (TFLite), Micro (microcontrollers), Coral Edge TPU |
+
+---
 
 ---
 
