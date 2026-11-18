@@ -1205,35 +1205,35 @@ This living tracker records your exact progress across all 14 curriculum phases.
 | Phase & Topic Code | Module / Subject Description | Prerequisites | Current Status | Practical Exercise Asset | Project Mapping | Interview Readiness |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **P0-ENV** | Environment Isolation & Scaffolding | Python, Git, OS | 🟢 **Implemented** | Dual `.venv` & `.venv_tf` check | Root Workspace | **Interview Ready** |
-| **P1-MATH-01** | Linear Algebra: Vectors, Matrices, Dots | Python Basics | 🟡 *Theory Completed* | Matrix mult from scratch | Foundations | In Progress |
-| **P1-MATH-02** | Calculus: Partial Derivatives, Gradients | High School Math | 🟡 *Theory Completed* | Deriving Linear Reg gradient | Foundations | In Progress |
-| **P1-ML-01** | Supervised vs Unsupervised vs RL | Python, Math | 🟢 **Implemented** | `ML_LEARNING_NOTES.md` code | Foundations | **Interview Ready** |
-| **P1-ML-02** | Regression vs Classification Losses | Statistics | 🟢 **Implemented** | `MultiTaskDetectionLoss` | Foundations | **Interview Ready** |
-| **P1-ML-03** | Classical ML: Decision Trees & K-Means | NumPy, Pandas | ⚪ *Not Started* | Trajectory clustering | Phase 1 Folder | Pending |
-| **P2-PT-01** | PyTorch Tensors, Shapes & Strides | NumPy | 🟢 **Implemented** | `verify_phase1.py` test harness | Core Backend | **Interview Ready** |
-| **P2-PT-02** | Autograd & Dynamic Computational Graphs | Calculus | ⚪ *Not Started* | `02_autograd_graph.py` | PyTorch Track | Pending |
-| **P2-PT-03** | Custom `nn.Module` & Backpropagation | PyTorch Basics | ⚪ *Not Started* | `04_forward_backward.py` | PyTorch Track | Pending |
-| **P2-PT-04** | CNN Architecture & Convolutions | Neural Networks | ⚪ *Not Started* | `06_cnn_architecture.py` | PyTorch Track | Pending |
-| **P3-TF-01** | TensorFlow Tensors & Math Operations | Python, Math | 🟢 **Implemented** | `01_tensor_basics.py` | TF Sandbox | **Interview Ready** |
-| **P3-TF-02** | Keras Sequential & Functional APIs | TF Tensors | ⚪ *Not Started* | `02_keras_neural_network.py`| TF Sandbox | Pending |
-| **P3-TF-03** | TensorFlow Lite & INT8 Quantization | Model Export | ⚪ *Not Started* | `06_model_evaluation.py` | TF Sandbox | Pending |
-| **P4-CV-01** | Digital Images, Pixels & Color Spaces | NumPy | ⚪ *Next Up* | BGR vs RGB channel swap | `video_reader.py`| Pending |
-| **P4-CV-02** | Video Decoding & Frame Generators | OpenCV | ⚪ *Next Up* | Memory-safe streaming | `video_reader.py`| Pending |
-| **P5-YOLO-01** | Single-Stage Detection & YOLO Architecture| CNNs, PyTorch | 🟢 **Implemented** | `yolo11n.pt` benchmark test | `detector.py` | **Interview Ready** |
-| **P5-YOLO-02** | IoU, Bounding Box Formats & NMS | Geometry | 🟢 **Implemented** | `test_module1_exercises.py` | `detector.py` | **Interview Ready** |
-| **P5-YOLO-03** | Aerial Vision Challenges (VisDrone) | YOLO11 | ⚪ *Next Up* | VisDrone sequence profiling | `detector.py` | Pending |
-| **P6-MOT-01** | Object Tracking & Kalman Filtering | Probability | ⚪ *Planned* | 1D Kalman implementation | `tracker.py` | Pending |
-| **P6-MOT-02** | ByteTrack & Hungarian Data Association | Tracking Basics | ⚪ *Planned* | Cost matrix matching | `tracker.py` | Pending |
-| **P7-ANL-01** | Polygon Zone Ingress/Egress & Density | Geometry | ⚪ *Planned* | Ray casting algorithm | `analytics_engine` | Pending |
-| **P8-API-01** | FastAPI Async Video Ingestion & Workers | Async Python | ⚪ *Planned* | BackgroundTasks upload | Backend REST | Pending |
-| **P8-API-02** | SQLAlchemy ORM & Relational Modeling | SQL Basics | ⚪ *Planned* | VideoJob migration | Backend DB | Pending |
-| **P9-UI-01** | React 19 + Vite Dashboard Scaffolding | TypeScript | 🟢 **Implemented** | `npm run build` verified | Frontend | **Interview Ready** |
-| **P9-UI-02** | Synchronized HTML5 Canvas Video Player | React, Canvas | ⚪ *Planned* | `requestVideoFrameCallback` | Frontend | Pending |
-| **P10-GEN-01**| Transformer Architecture & Self-Attention | Linear Algebra | ⚪ *Planned* | Attention from scratch | AI Agent | Pending |
-| **P10-GEN-02**| Gemini API & Structured Pydantic Output | LLMs | ⚪ *Planned* | Flight summary schema | AI Agent | Pending |
-| **P11-RAG-01**| Qdrant Vector DB & Dense Embeddings | Vectors, Cosine | ⚪ *Planned* | Semantic SOP retrieval | RAG Pipeline | Pending |
-| **P12-AGT-01**| LangGraph Cyclic State Machines & Tools | LangChain, APIs | ⚪ *Planned* | Multi-tool drone agent | Autonomous Agent | Pending |
-| **P13-OPS-01**| Docker Containerization & OpenVINO CPU | Docker, Linux | ⚪ *Planned* | `docker-compose.yml` | Deployment | Pending |
+| **P1-MATH-01** | Linear Algebra: Vectors, Matrices, Dots | Python Basics | 🟢 **Implemented** | `01_vectors_matrices_dot_products.py` | `learning/classical_ml/` | **Interview Ready** |
+| **P1-MATH-02** | Calculus: Partial Derivatives, Gradients | High School Math | 🟢 **Implemented** | `02_calculus_gradients_and_descent.py` | `learning/classical_ml/` | **Interview Ready** |
+| **P1-ML-01** | Supervised vs Unsupervised vs RL | Python, Math | 🟢 **Implemented** | `03_linear_and_logistic_regression.py` | `learning/classical_ml/` | **Interview Ready** |
+| **P1-ML-02** | Regression vs Classification Losses | Statistics | 🟢 **Implemented** | `MultiTaskDetectionLoss` | `learning/classical_ml/` | **Interview Ready** |
+| **P1-ML-03** | Classical ML: Decision Trees & K-Means | NumPy, Pandas | 🟢 **Implemented** | `04_decision_trees_and_random_forests.py` & `05_kmeans_clustering.py` | `learning/classical_ml/` | **Interview Ready** |
+| **P2-PT-01** | PyTorch Tensors, Shapes & Strides | NumPy | 🟢 **Implemented** | `01_tensors_and_memory_layout.py` | `learning/pytorch/` | **Interview Ready** |
+| **P2-PT-02** | Autograd & Dynamic Computational Graphs | Calculus | 🟢 **Implemented** | `02_autograd_graph.py` | `learning/pytorch/` | **Interview Ready** |
+| **P2-PT-03** | Custom `nn.Module` & Backpropagation | PyTorch Basics | 🟢 **Implemented** | `03_custom_nn_module_and_training.py` | `learning/pytorch/` | **Interview Ready** |
+| **P2-PT-04** | CNN Architecture & Convolutions | Neural Networks | 🟢 **Implemented** | `04_cnn_architecture.py` | `learning/pytorch/` | **Interview Ready** |
+| **P3-TF-01** | TensorFlow Tensors & Math Operations | Python, Math | 🟢 **Implemented** | `01_tensor_basics.py` | `learning/tensorflow/` | **Interview Ready** |
+| **P3-TF-02** | Keras Sequential & Functional APIs | TF Tensors | 🟢 **Implemented** | `02_keras_neural_network.py` | `learning/tensorflow/` | **Interview Ready** |
+| **P3-TF-03** | TensorFlow Lite & INT8 Quantization | Model Export | 🟢 **Implemented** | `06_model_evaluation.py` | `learning/tensorflow/` | **Interview Ready** |
+| **P4-CV-01** | Digital Images, Pixels & Color Spaces | NumPy | 🟢 **Implemented** | `learning/computer_vision/` | `backend/app/cv/` | **Interview Ready** |
+| **P4-CV-02** | Video Decoding & Frame Generators | OpenCV | 🟢 **Implemented** | `01_video_stream_reader.py` | `backend/app/cv/video_reader.py` | **Interview Ready** |
+| **P5-YOLO-01** | Single-Stage Detection & YOLO Architecture| CNNs, PyTorch | 🟢 **Implemented** | `01_yolo_inference_pipeline.py` | `backend/app/cv/detector.py` | **Interview Ready** |
+| **P5-YOLO-02** | IoU, Bounding Box Formats & NMS | Geometry | 🟢 **Implemented** | `02_iou_and_non_max_suppression.py` | `backend/app/cv/detector.py` | **Interview Ready** |
+| **P5-YOLO-03** | Aerial Vision Challenges (VisDrone) | YOLO11 | 🟢 **Implemented** | `03_precision_recall_benchmark.py` | `backend/app/cv/detector.py` | **Interview Ready** |
+| **P6-MOT-01** | Object Tracking & Kalman Filtering | Probability | 🟢 **Implemented** | `01_kalman_filter_state_estimation.py` | `backend/app/cv/tracker.py` | **Interview Ready** |
+| **P6-MOT-02** | ByteTrack & Hungarian Data Association | Tracking Basics | 🟢 **Implemented** | `02_hungarian_and_bytetrack.py` | `backend/app/cv/tracker.py` | **Interview Ready** |
+| **P7-ANL-01** | Polygon Zone Ingress/Egress & Density | Geometry | 🟢 **Implemented** | `01_point_in_polygon_and_geofencing.py` | `backend/app/cv/analytics_engine.py` | **Interview Ready** |
+| **P8-API-01** | FastAPI Async Video Ingestion & Workers | Async Python | 🟢 **Implemented** | `backend/app/api/v1/` & background worker | Backend REST | **Interview Ready** |
+| **P8-API-02** | SQLAlchemy ORM & Relational Modeling | SQL Basics | 🟢 **Implemented** | `backend/app/db/` SQLite models & schemas | Backend DB | **Interview Ready** |
+| **P9-UI-01** | React 19 + Vite Dashboard Scaffolding | TypeScript | 🟢 **Implemented** | Production Vite build verified in 1.49s | Frontend | **Interview Ready** |
+| **P9-UI-02** | Synchronized HTML5 Canvas Video Player | React, Canvas | 🟢 **Implemented** | `frontend/src/components/` & Recharts | Frontend | **Interview Ready** |
+| **P10-GEN-01**| Transformer Architecture & Self-Attention | Linear Algebra | 🟢 **Implemented** | `learning/genai/01_transformer_attention_mechanism.py` | AI Agent | **Interview Ready** |
+| **P10-GEN-02**| Gemini API & Structured Pydantic Output | LLMs | 🟢 **Implemented** | `backend/app/services/llm_reporter.py` | AI Agent | **Interview Ready** |
+| **P11-RAG-01**| Qdrant Vector DB & Dense Embeddings | Vectors, Cosine | 🟢 **Implemented** | `learning/rag_vector_db/` & `backend/app/services/rag_service.py` | RAG Pipeline | **Interview Ready** |
+| **P12-AGT-01**| LangGraph Cyclic State Machines & Tools | LangChain, APIs | 🟢 **Implemented** | `learning/ai_agents/` & `backend/app/services/agent_service.py` | Autonomous Agent | **Interview Ready** |
+| **P13-OPS-01**| Docker Containerization & ONNX CPU | Docker, Linux | 🟢 **Implemented** | `docker-compose.yml`, `Dockerfile.*`, `backend/app/services/mlops_service.py` | Deployment | **Interview Ready** |
 
 ---
 

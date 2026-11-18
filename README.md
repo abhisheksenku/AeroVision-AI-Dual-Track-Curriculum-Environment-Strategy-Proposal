@@ -103,13 +103,24 @@ AeroVision-AI/
 ### Prerequisites
 - Python 3.11.x
 - Node.js 20.x LTS + npm
+- Docker & Docker Compose (Optional for containerized run)
 - Git
 
-### 1. Clone & Set Up Environment
+### Option A: Run via Docker Compose (Recommended)
+```bash
+docker compose up --build
+```
+- Frontend Dashboard: [http://localhost](http://localhost)
+- Backend REST API: [http://localhost/api/v1/health](http://localhost/api/v1/health)
+- API Documentation (Swagger): [http://localhost/api/docs](http://localhost/api/docs)
+
+### Option B: Local Development Setup
+
+#### 1. Clone & Set Up Environment
 ```powershell
 # Clone the repository
-git clone https://github.com/your-username/AeroVision-AI.git
-cd AeroVision-AI
+git clone https://github.com/abhisheksenku/AeroVision-AI-Dual-Track-Curriculum-Environment-Strategy-Proposal.git
+cd AeroVision-AI-Dual-Track-Curriculum-Environment-Strategy-Proposal
 
 # Create virtual environment
 python -m venv .venv
@@ -118,29 +129,21 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-### 2. Install Python Dependencies
+#### 2. Install Python Dependencies
 ```powershell
 # Install PyTorch CPU
 .\.venv\Scripts\python.exe -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
-# Install Computer Vision Stack
+# Install Computer Vision Stack & Platform Dependencies
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-### 3. Verify Computer Vision Environment
+#### 3. Run Backend Server
 ```powershell
-.\.venv\Scripts\python.exe -c "
-import torch, cv2, ultralytics, lap, supervision
-from ultralytics import YOLO
-print('PyTorch:', torch.__version__, '| CUDA:', torch.cuda.is_available())
-print('OpenCV:', cv2.__version__)
-print('Ultralytics:', ultralytics.__version__)
-model = YOLO('models/weights/yolo11n.pt')
-print('Model ready:', model.task)
-"
+.\.venv\Scripts\uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 4. Set Up & Run Frontend
+#### 4. Run Frontend Dashboard
 ```powershell
 cd frontend
 npm install
@@ -149,16 +152,30 @@ npm run dev
 ```
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
+#### 5. Run Verification & Test Suites
+```powershell
+.\.venv\Scripts\python.exe backend/tests/test_rag_pipeline.py
+.\.venv\Scripts\python.exe backend/tests/test_agent_graph.py
+.\.venv\Scripts\python.exe backend/tests/test_mlops_pipeline.py
+```
+
 ---
 
-## 5. Implementation Roadmap Status
+## 5. Implementation Roadmap Status (14 / 14 Phases Complete)
 
-- [x] **Phase 1: Environment Setup & Workspace Foundation**
-- [ ] **Phase 2: Computer Vision Detection MVP (VisDrone + YOLO11)**
-- [ ] **Phase 3: Object Tracking & Performance Evaluation (ByteTrack + mAP)**
-- [ ] **Phase 4: FastAPI Backend & Asynchronous Worker**
-- [ ] **Phase 5: React Dashboard Integration**
-- [ ] **Phase 6: LangGraph AI Agent & Qdrant RAG**
-- [ ] **Phase 7: Docker Containerization, Testing & Deployment**
+- [x] **Phase 0: Development Environment & Engineering Foundations** (Dual `.venv` / `.venv_tf`, Smart App Control shims)
+- [x] **Phase 1: Mathematics & Classical ML Foundations** (Vectors, Gradients, Linear/Logistic, Trees, K-Means)
+- [x] **Phase 2: Deep Learning with PyTorch** (Autograd, Custom CNNs, ResNet50, YOLO11 detection backbone)
+- [x] **Phase 3: TensorFlow & Keras Edge Track** (Functional MIMO, Callbacks, ResNet Transfer Learning, TFLite INT8 PTQ)
+- [x] **Phase 4: Computer Vision Foundations** (OpenCV streaming, optical flow, homography, perspective warping)
+- [x] **Phase 5: Modern Object Detection with YOLO11** (Single-stage inference, NMS, Precision-Recall benchmark)
+- [x] **Phase 6: Multi-Object Tracking with ByteTrack** (Kalman Filter, Hungarian Algorithm, lapx, track smoothing)
+- [x] **Phase 7: Drone Analytics Engine** (Ray-casting polygon geofencing, tripwires, loitering detection, time-to-violation)
+- [x] **Phase 8: Production Backend Engineering** (FastAPI, SQLite persistence, async background video worker, REST API)
+- [x] **Phase 9: Production Frontend Dashboard** (React 19, TypeScript, TailwindCSS, Lucide, Recharts telemetry)
+- [x] **Phase 10: LLM & Generative AI Foundations** (Gemini 2.5 Flash, structured incident reporting, hallucination verification)
+- [x] **Phase 11: Regulatory RAG Pipeline** (Qdrant Vector DB, FAA Part 107 / OSHA 1910 / NIST, cosine similarity search)
+- [x] **Phase 12: Autonomous AI Agents with LangGraph** (StateGraph, ReAct supervisor multi-agent architecture, self-reflection loop)
+- [x] **Phase 13: MLOps, Containerization & Production Deployment** (ONNX Runtime 3.17x CPU speedup, dynamic INT8 quantization, PSI drift engine, multi-stage Docker, Nginx, CI/CD)
 
-For detailed logs and benchmark results, see [DEVELOPMENT_PROGRESS.md](file:///D:/Projects/AeroVision-AI/DEVELOPMENT_PROGRESS.md).
+For comprehensive engineering logs, benchmarking data, and architectural notes, see [DEVELOPMENT_PROGRESS.md](file:///D:/Projects/AeroVision-AI/DEVELOPMENT_PROGRESS.md) and [AEROVISION_PROJECT_LEARNING_ROADMAP.md](file:///D:/Projects/AeroVision-AI/AEROVISION_PROJECT_LEARNING_ROADMAP.md).
