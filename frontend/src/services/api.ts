@@ -10,7 +10,9 @@ import type {
   MissionAnalytics,
   MissionComplianceReport,
   MissionRAGContextResponse,
-  RAGSearchResponse
+  RAGSearchResponse,
+  AutonomousResponseResult,
+  AgentChatResponse
 } from '../types';
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -112,6 +114,25 @@ export const api = {
       query,
       top_k: topK,
       category,
+    });
+    return res.data;
+  },
+
+  /**
+   * Execute multi-agent autonomous incident response StateGraph (LangGraph)
+   */
+  async triggerIncidentResponse(jobId: string): Promise<AutonomousResponseResult> {
+    const res = await client.post<AutonomousResponseResult>(`/agents/incident-response/${jobId}`);
+    return res.data;
+  },
+
+  /**
+   * Interactive conversational chat with autonomous agent (tool calling)
+   */
+  async chatWithAgent(message: string, jobId?: string): Promise<AgentChatResponse> {
+    const res = await client.post<AgentChatResponse>('/agents/chat', {
+      message,
+      job_id: jobId,
     });
     return res.data;
   },

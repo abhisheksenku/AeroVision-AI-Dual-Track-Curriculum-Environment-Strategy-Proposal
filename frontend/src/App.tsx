@@ -8,6 +8,7 @@ import { ViolationsTable } from './components/ViolationsTable';
 import { JobHistorySelector } from './components/JobHistorySelector';
 import { AiReportCard } from './components/AiReportCard';
 import { RegulatoryCitationsCard } from './components/RegulatoryCitationsCard';
+import { AgentCommanderConsole } from './components/AgentCommanderConsole';
 import { api } from './services/api';
 import type { JobResponse, MissionAnalytics, MissionComplianceReport } from './types';
 import { ShieldCheck, Video, Activity, Sparkles, BarChart2 } from 'lucide-react';
@@ -217,7 +218,14 @@ export default function App() {
           </div>
         )}
 
-        {/* Section 6: Violations Audit Log */}
+        {/* Section 6: Autonomous Incident Commander (LangGraph Multi-Agent) */}
+        {analytics && (
+          <div className="pt-2">
+            <AgentCommanderConsole jobId={selectedJob?.job_id || null} />
+          </div>
+        )}
+
+        {/* Section 7: Violations Audit Log */}
         {analytics && (
           <div className="pt-2">
             <ViolationsTable violations={analytics.safety_audit.violations_log || []} />
@@ -227,7 +235,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800 py-4 px-6 text-center text-xs text-slate-500 bg-slate-950/80">
-        AeroVision AI &copy; 2026 &bull; Production Video Intelligence Platform &bull; Phase 11 RAG Pipeline Verified
+        AeroVision AI &copy; 2026 &bull; Production Video Intelligence Platform &bull; Phase 12 Autonomous Agents Verified
       </footer>
     </div>
   );

@@ -932,4 +932,55 @@ Retrieval quality is measured quantitatively against benchmark queries:
    Where $\text{rank}_i$ is the 1-based rank position of the first relevant document for query $i$. AeroVision AI enforces $\text{MRR} \ge 0.75$, ensuring users immediately see the correct governing law in the top 1-2 hits.
 
 
+---
+
+# Module 13: Autonomous AI Agents & LangGraph StateGraphs
+
+---
+
+## 16. Agentic Orchestration, Cyclic Graphs & Containment Physics
+
+### 16.1 Graph-Theoretic Foundations of Agent Execution
+Traditional LLM chains follow linear DAG topologies where failure at any node halts the pipeline:
+$$\text{Linear Chain}: \quad S_0 \xrightarrow{f_1} S_1 \xrightarrow{f_2} S_2 \dots \xrightarrow{f_n} S_n$$
+
+LangGraph models agent workflows as **Finite State Machines over Directed Graphs** $G = (V, E)$ where nodes $v \in V$ represent computational functions $f_v(S) \to \Delta S$ and edges $e \in E$ represent state transitions.
+- **Reducers**: State channels apply deterministic reducer functions:
+  $$S_{t+1}[k] = \text{reducer}(S_t[k], \Delta S[k])$$
+  For example, `Annotated[List[str], operator.add]` guarantees non-destructive message appending across multi-agent handoffs.
+- **Cyclic Feedback Loops**: Unlike DAGs, StateGraphs permit backward edges ($v_j \to v_i$ where $j > i$), enabling autonomous retry, tool execution loops, and self-reflection.
+
+### 16.2 The ReAct Loop (Reasoning + Acting)
+The ReAct paradigm interleaves thought generation with targeted environment interaction:
+$$\text{Thought}_t \longrightarrow \text{Action}_t(\text{Tool}, \text{Args}) \longrightarrow \text{Observation}_t \longrightarrow \text{Thought}_{t+1} \dots$$
+
+In AeroVision AI, the agent does not guess physical containment or statutory citations; it executes deterministic tools:
+1. `inspect_tracking_telemetry(track_id)`: Fetches ground truth speed, heading, and dwell time.
+2. `query_statutory_regulations(query)`: Vector similarity retrieval over Qdrant.
+3. `calculate_containment_radius(speed, reaction_time, friction)`: Solves vehicle kinematics.
+
+### 16.3 Containment Physics: Kinematic Stopping Radius
+When a vehicle breaches an industrial perimeter or speeds along an active flight line, the agent calculates the minimum emergency containment radius $r_{\text{contain}}$:
+$$r_{\text{contain}} = d_{\text{reaction}} + d_{\text{braking}} = \left(v \cdot t_{\text{reaction}}\right) + \left(\frac{v^2}{2 \mu g}\right)$$
+
+Where:
+- $v = \frac{v_{\text{km/h}}}{3.6}$ is velocity in $\text{m/s}$.
+- $t_{\text{reaction}} = 1.5\text{ s}$ is nominal driver reaction time.
+- $\mu = 0.70$ is the coefficient of tire-asphalt dry friction.
+- $g = 9.81\text{ m/s}^2$ is gravitational acceleration.
+
+For a vehicle speeding at $72.5\text{ km/h}$ ($20.14\text{ m/s}$):
+$$d_{\text{reaction}} = 20.14 \times 1.5 = 30.21\text{ m}, \quad d_{\text{braking}} = \frac{20.14^2}{2 \times 0.70 \times 9.81} = \frac{405.62}{13.73} = 29.54\text{ m}$$
+$$r_{\text{contain}} = 30.21 + 29.54 = 59.75\text{ m}$$
+
+The autonomous agent uses this exact radius to command physical gate locks and drone camera gimbal tracking radii.
+
+### 16.4 Closed-Loop Reflection & Self-Correction
+To eliminate hallucinations in safety-critical deployments, all generated Incident Action Plans pass through a critic-auditor node:
+$$\text{Draft} \longrightarrow \text{Critic Auditor} \xrightarrow{\text{Audit Flaws}} \text{Refiner} \longrightarrow \text{Critic Auditor} \xrightarrow{\text{Score} = 1.0} \text{END}$$
+
+The Critic computes symbolic set intersections between draft claims and SQLite ground truth telemetry. If ungrounded entities (e.g. non-existent aircraft) or incorrect speeds are identified, the Critic returns targeted critique directives to the Refiner node, ensuring 100% verified grounded output before presentation to human flight directors.
+
+
+
 

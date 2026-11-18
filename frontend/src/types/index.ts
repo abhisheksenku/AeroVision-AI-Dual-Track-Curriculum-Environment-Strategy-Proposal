@@ -131,3 +131,45 @@ export interface RAGSearchResponse {
   total_results: number;
   results: RegulatoryCitation[];
 }
+
+export interface TacticalDirective {
+  step_number: number;
+  action: string;
+  target_unit: string;
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+}
+
+export interface IncidentActionPlan {
+  mission_id: string;
+  job_id: string;
+  incident_type: string;
+  threat_level: 'LOW' | 'ELEVATED' | 'CRITICAL';
+  kinematics_summary: string;
+  statutory_citations: string[];
+  containment_radius_m: number;
+  tactical_directives: TacticalDirective[];
+  grounding_score: number;
+  grounding_verdict: 'VERIFIED_GROUNDED' | 'MINOR_DEVIATION' | 'UNRELIABLE_HALLUCINATION';
+  generated_at: string;
+}
+
+export interface AgentStepTrace {
+  step_index: number;
+  node_name: string;
+  action_summary: string;
+  details?: Record<string, unknown>;
+}
+
+export interface AutonomousResponseResult {
+  job_id: string;
+  status: 'SUCCESS' | 'FAILED';
+  action_plan: IncidentActionPlan;
+  execution_trace: AgentStepTrace[];
+  iterations_completed: number;
+}
+
+export interface AgentChatResponse {
+  reply: string;
+  tools_invoked: string[];
+  data_grounding: Record<string, unknown>;
+}

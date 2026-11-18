@@ -18,6 +18,7 @@ from backend.app.api.v1.jobs import router as jobs_router
 from backend.app.api.v1.analytics import router as analytics_router
 from backend.app.api.v1.reports import router as reports_router
 from backend.app.api.v1.rag import router as rag_router
+from backend.app.api.v1.agents import router as agents_router
 
 # 1. Initialize Database Tables on Startup
 Base.metadata.create_all(bind=engine)
@@ -50,6 +51,7 @@ app.include_router(jobs_router, prefix="/api/v1")
 app.include_router(analytics_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
 app.include_router(rag_router, prefix="/api/v1")
+app.include_router(agents_router, prefix="/api/v1")
 
 @app.get("/")
 def get_root():
