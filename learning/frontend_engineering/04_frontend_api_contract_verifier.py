@@ -68,6 +68,15 @@ def verify_frontend_contracts():
             assert "violations_log" in analytics_json["safety_audit"]
             print("✓ Analytics response interface contract matches TypeScript: MissionAnalytics")
 
+            # 4. Reports Contract Check
+            res_report = client.get(f"/api/v1/reports/{job_id}")
+            if res_report.status_code == 200:
+                report_json = res_report.json()
+                required_report_keys = ["mission_id", "job_id", "executive_summary", "threat_level", "grounding_audit"]
+                for k in required_report_keys:
+                    assert k in report_json, f"Missing key '{k}' in report response!"
+                print("✓ AI Report interface contract matches TypeScript: MissionComplianceReport")
+
     print("\n[SUCCESS] All API endpoints adhere strictly to frontend client contracts.")
     print()
 
@@ -79,3 +88,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

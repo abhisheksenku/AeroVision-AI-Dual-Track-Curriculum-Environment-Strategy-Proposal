@@ -56,6 +56,7 @@ class MissionAnalyticsRecord(Base):
     
     total_violations: Mapped[int] = mapped_column(Integer, default=0)
     compliance_status: Mapped[str] = mapped_column(String(32), default="COMPLIANT")
+    ai_report_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     job: Mapped[JobRecord] = relationship(back_populates="analytics")
 

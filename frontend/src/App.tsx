@@ -6,14 +6,16 @@ import { MissionSummaryCards } from './components/MissionSummaryCards';
 import { AnalyticsCharts } from './components/AnalyticsCharts';
 import { ViolationsTable } from './components/ViolationsTable';
 import { JobHistorySelector } from './components/JobHistorySelector';
+import { AiReportCard } from './components/AiReportCard';
 import { api } from './services/api';
-import type { JobResponse, MissionAnalytics } from './types';
+import type { JobResponse, MissionAnalytics, MissionComplianceReport } from './types';
 import { ShieldCheck, Video, Activity, Sparkles, BarChart2 } from 'lucide-react';
 
 export default function App() {
   const [jobs, setJobs] = useState<JobResponse[]>([]);
   const [selectedJob, setSelectedJob] = useState<JobResponse | null>(null);
   const [analytics, setAnalytics] = useState<MissionAnalytics | null>(null);
+  const [aiReport, setAiReport] = useState<MissionComplianceReport | null>(null);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
   const [, setIsLoadingAnalytics] = useState(false);
 
@@ -56,12 +58,16 @@ export default function App() {
     loadJobs(true);
   }, [loadJobs]);
 
-  // When selectedJob changes, fetch analytics if completed
+  // When selectedJob changes, fetch analytics and existing AI report if completed
   useEffect(() => {
     if (selectedJob?.status === 'COMPLETED') {
       loadAnalytics(selectedJob.job_id);
+      api.getAiReport(selectedJob.job_id)
+        .then((rep) => setAiReport(rep))
+        .catch(() => setAiReport(null));
     } else {
       setAnalytics(null);
+      setAiReport(null);
     }
   }, [selectedJob?.job_id, selectedJob?.status, loadAnalytics]);
 
@@ -192,7 +198,18 @@ export default function App() {
           </div>
         )}
 
-        {/* Section 4: Violations Audit Log */}
+        {/* Section 4: Gemini AI Safety & Compliance Briefing */}
+        {analytics && (
+          <div className="pt-2">
+            <AiReportCard
+              jobId={selectedJob?.job_id || null}
+              report={aiReport}
+              onReportGenerated={(rep) => setAiReport(rep)}
+            />
+          </div>
+        )}
+
+        {/* Section 5: Violations Audit Log */}
         {analytics && (
           <div className="pt-2">
             <ViolationsTable violations={analytics.safety_audit.violations_log || []} />

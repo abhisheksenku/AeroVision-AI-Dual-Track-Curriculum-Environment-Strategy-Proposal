@@ -844,3 +844,45 @@ FastAPI returns nested analytical payloads containing categorical distributions 
 - **Comparative Metrics**: Normalizing mean velocity vs 95th-percentile peak velocity onto dual-bar charts to immediately expose reckless driving or speed limit exceedances.
 - **Hierarchical Safety Auditing**: Partitioning violation events by severity (`CRITICAL` vs `WARNING`) for donut-chart representation with color-coded alerts matching ISO/IEC safety conventions.
 
+
+---
+
+# Module 11: LLM Foundations, Multimodal Generative AI & Spatio-Temporal Grounding
+
+---
+
+## 14. Generative AI Engineering for Autonomous Drone Surveillance
+
+### 14.1 Gemini API & Multimodal Reasoning Mechanics
+Google's Gemini series (such as `gemini-2.5-flash`) provides native multimodal comprehension, sub-second latency, and extensive context windows (up to 1M+ tokens).
+- **In-Context Spatio-Temporal Grounding**: Raw bounding boxes $[x_1, y_1, x_2, y_2]$ and tracking vectors $\vec{v} = (v_x, v_y)$ are converted into symbolic semantic entities with calibrated ground sample distances:
+  $$\text{Semantic Entity} = \{\text{ID}, \text{Class}, t_{\text{start}}, t_{\text{end}}, \bar{v}_{\text{km/h}}, v_{\max}, \text{Zones}\}$$
+- **Generation Parameters**:
+  - `temperature = 0.2`: Suppresses stochastic divergence, prioritizing factual, reproducible compliance assessments.
+  - `max_output_tokens = 1024`: Bound output length to guarantee fast response latencies in operational dashboards.
+
+### 14.2 Chain-of-Thought (CoT) Prompting for Incident Causality
+Standard zero-shot generation often jumps directly to high-level summaries, missing subtle kinematic precursors. Chain-of-Thought prompting directs the model through four distinct deductive stages:
+1. **Telemetry Ingestion**: Validate tracking entity counts, dominant classifications, and baseline traffic density.
+2. **Threshold Auditing**: Check recorded values against statutory constraints (e.g., $v > v_{\text{limit}}$, $P_{\text{track}} \in \text{Zone}_{\text{restricted}}$).
+3. **Causal Attribution**: Determine whether infractions occurred in isolation or were precipitated by traffic bottlenecks, evasive swerves, or poor perimeter marking.
+4. **Remediation Synthesis**: Formulate prioritized operational interventions (e.g., physical barriers, radar speed signs).
+
+### 14.3 Structured Outputs with Pydantic
+Brittle regex parsing of LLM markdown is replaced by **Constrained Decoding / JSON Schema Enforcement**:
+- The Pydantic model (`MissionComplianceReport`) defines type-safe fields and enum literals (`threat_level: Literal["LOW", "ELEVATED", "CRITICAL"]`).
+- Gemini enforces schema compliance directly at decoding time via `response_mime_type="application/json"` and `response_schema`, ensuring $100\%$ parseable JSON.
+
+### 14.4 Grounding Fidelity & Hallucination Defense
+In safety-critical aviation and traffic surveillance, hallucinations (e.g., claiming a non-existent vehicle crashed or reporting false speeds) pose severe liability hazards.
+The **Deterministic Grounding Auditor** executes post-generation verification:
+$$\text{Grounding Score} = 0.35 \cdot S_{\text{entity}} + 0.35 \cdot S_{\text{speed}} + 0.30 \cdot S_{\text{incident}}$$
+
+Where:
+- **Entity Score** $S_{\text{entity}} = 1.0 - \frac{|\text{Reported Classes} \setminus \text{CV Ground Truth}|}{|\text{Reported Classes}|}$
+- **Speed Score** $S_{\text{speed}} = \max\left(0, 1.0 - \frac{|\text{Speed}_{\text{reported}} - \text{Speed}_{\text{actual}}|}{\text{Speed}_{\text{actual}}}\right)$ (with $1.5\text{ km/h}$ margin)
+- **Incident Score** $S_{\text{incident}} = \frac{|\text{Reported Violations} \cap \text{Recorded Violations}|}{|\text{Reported Violations}|}$
+
+Reports scoring $\ge 0.90$ are certified as `VERIFIED_GROUNDED`, guaranteeing zero hallucination before presentation to human operators.
+
+

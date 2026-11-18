@@ -4,7 +4,7 @@
  */
 
 import axios from 'axios';
-import type { SystemHealth, JobResponse, MissionAnalytics } from '../types';
+import type { SystemHealth, JobResponse, MissionAnalytics, MissionComplianceReport } from '../types';
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
@@ -67,6 +67,25 @@ export const api = {
    */
   async getAnalytics(jobId: string): Promise<MissionAnalytics> {
     const res = await client.get<MissionAnalytics>(`/analytics/${jobId}`);
+    return res.data;
+  },
+
+  /**
+   * Generate Gemini AI mission compliance report with grounding verification
+   */
+  async generateAiReport(jobId: string, modelName = 'gemini-2.5-flash'): Promise<MissionComplianceReport> {
+    const res = await client.post<MissionComplianceReport>(`/reports/${jobId}/generate`, {
+      model_name: modelName,
+      temperature: 0.2,
+    });
+    return res.data;
+  },
+
+  /**
+   * Retrieve cached Gemini AI mission report
+   */
+  async getAiReport(jobId: string): Promise<MissionComplianceReport> {
+    const res = await client.get<MissionComplianceReport>(`/reports/${jobId}`);
     return res.data;
   },
 

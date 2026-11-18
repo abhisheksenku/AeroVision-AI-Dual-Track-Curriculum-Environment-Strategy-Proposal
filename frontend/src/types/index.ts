@@ -68,3 +68,36 @@ export interface MissionAnalytics {
   line_crossings: Record<string, number>;
   safety_audit: SafetyAudit;
 }
+
+export interface IncidentDetail {
+  track_id: number;
+  class_name: string;
+  rule_type: string;
+  severity: 'WARNING' | 'CRITICAL';
+  narrative: string;
+}
+
+export interface GroundingAuditResult {
+  grounding_score: number;
+  verdict: 'VERIFIED_GROUNDED' | 'MINOR_DEVIATION' | 'UNRELIABLE_HALLUCINATION';
+  entity_score: number;
+  speed_score: number;
+  incident_score: number;
+  hallucinated_classes: string[];
+  speed_delta_kmh: number;
+}
+
+export interface MissionComplianceReport {
+  mission_id: string;
+  job_id: string;
+  executive_summary: string;
+  threat_level: 'LOW' | 'ELEVATED' | 'CRITICAL';
+  compliance_status: 'COMPLIANT' | 'AUDIT_FLAGGED';
+  total_tracked_objects: number;
+  peak_speed_kmh: number;
+  incidents: IncidentDetail[];
+  operational_recommendations: string[];
+  grounding_audit: GroundingAuditResult;
+  model_used: string;
+  generated_at: string;
+}
