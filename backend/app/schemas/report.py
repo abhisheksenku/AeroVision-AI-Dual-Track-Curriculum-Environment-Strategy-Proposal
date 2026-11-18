@@ -15,6 +15,7 @@ class IncidentDetail(BaseModel):
     rule_type: str = Field(description="Infraction rule category")
     severity: Literal["WARNING", "CRITICAL"] = Field(description="Severity flag")
     narrative: str = Field(description="Contextual explanation of risk and observed kinematics")
+    statutory_citations: List[str] = Field(default_factory=list, description="Citations to governing FAA/OSHA laws")
 
 
 class GroundingAuditResult(BaseModel):

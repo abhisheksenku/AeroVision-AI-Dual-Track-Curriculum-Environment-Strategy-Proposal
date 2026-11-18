@@ -16,7 +16,6 @@ from pydantic import BaseModel
 
 from backend.app.db.database import get_db
 from backend.app.db.models import JobRecord
-from backend.app.services.worker import process_video_job
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -83,6 +82,7 @@ async def upload_drone_video(
     db.commit()
 
     # Enqueue background task
+    from backend.app.services.worker import process_video_job
     background_tasks.add_task(process_video_job, job_id)
 
     return {

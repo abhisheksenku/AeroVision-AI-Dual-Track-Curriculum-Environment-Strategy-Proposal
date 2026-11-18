@@ -886,3 +886,50 @@ Where:
 Reports scoring $\ge 0.90$ are certified as `VERIFIED_GROUNDED`, guaranteeing zero hallucination before presentation to human operators.
 
 
+---
+
+# Module 12: Retrieval-Augmented Generation (RAG) & Vector Databases
+
+---
+
+## 15. Vector Embeddings, Metric Spaces & Regulatory Retrieval
+
+### 15.1 Mathematical Foundations of Dense Vector Embeddings
+Retrieval-Augmented Generation (RAG) grounds LLM outputs in external verified knowledge bases, eliminating knowledge cutoffs and factual hallucination.
+Text documents and spatio-temporal violation events are projected into a continuous vector space $\mathbb{R}^d$ ($d=384$):
+$$\mathbf{e} = f_{\text{embed}}(\text{document}) \in \mathbb{R}^d$$
+
+To ensure that vector magnitudes do not bias similarity scoring, all vectors are $L_2$-normalized to reside on the unit hypersphere $\mathbb{S}^{d-1}$:
+$$\hat{\mathbf{u}} = \frac{\mathbf{u}}{\|\mathbf{u}\|_2}, \quad \|\hat{\mathbf{u}}\|_2 = \sqrt{\sum_{i=1}^d \hat{u}_i^2} = 1.0$$
+
+### 15.2 Cosine Similarity vs Euclidean Distance Equivalence
+The semantic similarity between a query $\mathbf{q}$ and document $\mathbf{d}$ is quantified by the angle between their unit vectors:
+$$\text{Cosine Similarity}(\hat{\mathbf{q}}, \hat{\mathbf{d}}) = \frac{\hat{\mathbf{q}} \cdot \hat{\mathbf{d}}}{\|\hat{\mathbf{q}}\|_2 \|\hat{\mathbf{d}}\|_2} = \sum_{i=1}^d \hat{q}_i \hat{d}_i$$
+
+On the unit hypersphere where $\|\hat{\mathbf{q}}\|^2 = 1$ and $\|\hat{\mathbf{d}}\|^2 = 1$, the squared Euclidean distance expands as:
+$$d_{L_2}^2(\hat{\mathbf{q}}, \hat{\mathbf{d}}) = \|\hat{\mathbf{q}} - \hat{\mathbf{d}}\|_2^2 = \|\hat{\mathbf{q}}\|^2 + \|\hat{\mathbf{d}}\|^2 - 2(\hat{\mathbf{q}} \cdot \hat{\mathbf{d}}) = 1 + 1 - 2(\hat{\mathbf{q}} \cdot \hat{\mathbf{d}}) = 2 - 2 \cdot \text{Cosine}(\hat{\mathbf{q}}, \hat{\mathbf{d}})$$
+
+Therefore:
+$$\text{Cosine}(\hat{\mathbf{q}}, \hat{\mathbf{d}}) = 1 - \frac{1}{2} d_{L_2}^2(\hat{\mathbf{q}}, \hat{\mathbf{d}})$$
+
+**Theorem**: Maximizing cosine similarity is strictly equivalent to minimizing Euclidean distance on normalized embeddings, guaranteeing identical nearest-neighbor rankings.
+
+### 15.3 In-Memory & On-Disk Vector Stores (Qdrant)
+Qdrant manages vector persistence, payload storage, and similarity search:
+- **Index Schemes**: Exact Flat Search (exhaustive cosine comparison for small collections) and Hierarchical Navigable Small World (HNSW) graphs (logarithmic time complexity $O(\log N)$ for millions of points).
+- **Payload Metadata Filtering**: Allows boolean pre-filtering or post-filtering on categorical fields (e.g., restricting retrieval to `category == "FAA"` or `severity == "CRITICAL"`) without degrading search latency.
+- **Windows Portability**: In environments with strict native DLL code signing policies (Windows Smart App Control), Qdrant's embedded SQLite and local in-memory engines operate with zero remote gRPC overhead.
+
+### 15.4 Information Retrieval (IR) Evaluation Metrics
+Retrieval quality is measured quantitatively against benchmark queries:
+1. **Precision at K (Precision@K)**:
+   $$\text{Precision@K} = \frac{|\text{Relevant Documents} \cap \text{Top-K Retrieved}|}{K}$$
+2. **Recall at K (Recall@K)**:
+   $$\text{Recall@K} = \frac{|\text{Relevant Documents} \cap \text{Top-K Retrieved}|}{|\text{Total Relevant Documents in Corpus}|}$$
+3. **Mean Reciprocal Rank (MRR)**:
+   Measures where the first relevant statutory clause appears in the returned ranking:
+   $$\text{MRR} = \frac{1}{|Q|} \sum_{i=1}^{|Q|} \frac{1}{\text{rank}_i}$$
+   Where $\text{rank}_i$ is the 1-based rank position of the first relevant document for query $i$. AeroVision AI enforces $\text{MRR} \ge 0.75$, ensuring users immediately see the correct governing law in the top 1-2 hits.
+
+
+

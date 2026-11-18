@@ -75,6 +75,7 @@ export interface IncidentDetail {
   rule_type: string;
   severity: 'WARNING' | 'CRITICAL';
   narrative: string;
+  statutory_citations?: string[];
 }
 
 export interface GroundingAuditResult {
@@ -100,4 +101,33 @@ export interface MissionComplianceReport {
   grounding_audit: GroundingAuditResult;
   model_used: string;
   generated_at: string;
+}
+
+export interface RegulatoryCitation {
+  statute_code: string;
+  section_title: string;
+  category: string;
+  relevance_score: number;
+  text: string;
+}
+
+export interface AugmentedInfraction {
+  track_id: number;
+  class_name: string;
+  rule_type: string;
+  severity: string;
+  details: string;
+  citations: RegulatoryCitation[];
+}
+
+export interface MissionRAGContextResponse {
+  job_id: string;
+  total_infractions: number;
+  augmented_infractions: AugmentedInfraction[];
+}
+
+export interface RAGSearchResponse {
+  query: string;
+  total_results: number;
+  results: RegulatoryCitation[];
 }

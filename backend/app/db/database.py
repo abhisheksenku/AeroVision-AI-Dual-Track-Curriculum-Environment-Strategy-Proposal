@@ -8,16 +8,18 @@ SQLAlchemy SQLite configuration with automatic connection pooling and session li
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.pool import NullPool
 
 DB_DIR = "data"
 os.makedirs(DB_DIR, exist_ok=True)
 DB_PATH = os.path.join(DB_DIR, "aerovision.db")
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
-# Connect args needed for SQLite concurrency
+# NullPool prevents thread-affinity lockups across FastAPI AnyIO worker threads
 engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False},
+    poolclass=NullPool,
     echo=False
 )
 

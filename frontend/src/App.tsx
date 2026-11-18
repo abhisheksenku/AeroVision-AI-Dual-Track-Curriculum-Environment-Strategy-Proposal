@@ -7,6 +7,7 @@ import { AnalyticsCharts } from './components/AnalyticsCharts';
 import { ViolationsTable } from './components/ViolationsTable';
 import { JobHistorySelector } from './components/JobHistorySelector';
 import { AiReportCard } from './components/AiReportCard';
+import { RegulatoryCitationsCard } from './components/RegulatoryCitationsCard';
 import { api } from './services/api';
 import type { JobResponse, MissionAnalytics, MissionComplianceReport } from './types';
 import { ShieldCheck, Video, Activity, Sparkles, BarChart2 } from 'lucide-react';
@@ -209,7 +210,14 @@ export default function App() {
           </div>
         )}
 
-        {/* Section 5: Violations Audit Log */}
+        {/* Section 5: RAG Statutory Legal Citations (Qdrant Vector Database) */}
+        {analytics && (
+          <div className="pt-2">
+            <RegulatoryCitationsCard jobId={selectedJob?.job_id || null} />
+          </div>
+        )}
+
+        {/* Section 6: Violations Audit Log */}
         {analytics && (
           <div className="pt-2">
             <ViolationsTable violations={analytics.safety_audit.violations_log || []} />
@@ -219,7 +227,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800 py-4 px-6 text-center text-xs text-slate-500 bg-slate-950/80">
-        AeroVision AI &copy; 2026 &bull; Production Video Intelligence Platform &bull; Phase 9 Frontend Verified
+        AeroVision AI &copy; 2026 &bull; Production Video Intelligence Platform &bull; Phase 11 RAG Pipeline Verified
       </footer>
     </div>
   );

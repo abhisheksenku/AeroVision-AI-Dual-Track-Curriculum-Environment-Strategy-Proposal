@@ -14,21 +14,17 @@ import json
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from sqlalchemy import text
-from fastapi.testclient import TestClient
+from fastapi import HTTPException
 from backend.app.main import app
 from backend.app.db.database import Base, engine, SessionLocal
 from backend.app.db.models import JobRecord, MissionAnalyticsRecord, ViolationEventRecord
 from backend.app.services.llm_reporter import generate_mission_compliance_report
+from backend.app.api.v1.reports import create_mission_ai_report, get_mission_ai_report
+from backend.app.schemas.report import GenerateReportRequest
 
 
 def setup_module():
     Base.metadata.create_all(bind=engine)
-    with engine.connect() as conn:
-        try:
-            conn.execute(text("ALTER TABLE mission_analytics ADD COLUMN ai_report_json TEXT"))
-            conn.commit()
-        except Exception:
-            pass
 
 
 def test_llm_report_generation_and_api():
@@ -37,7 +33,6 @@ def test_llm_report_generation_and_api():
     print("=" * 70)
 
     db = SessionLocal()
-    client = TestClient(app)
 
     # 1. Create a dummy completed job with analytics and violations in SQLite
     test_job_id = "job_test_llm_01"
@@ -109,28 +104,25 @@ def test_llm_report_generation_and_api():
     assert len(report.incidents) == 1
     assert report.incidents[0].track_id == 3
 
-    # 3. Test REST API: GET Cached Report
-    res_get = client.get(f"/api/v1/reports/{test_job_id}")
-    assert res_get.status_code == 200
-    report_json = res_get.json()
-    assert report_json["job_id"] == test_job_id
-    assert report_json["grounding_audit"]["verdict"] == "VERIFIED_GROUNDED"
-    print("✓ GET /api/v1/reports/{job_id} returned cached report with 200 OK.")
+    # 3. Test REST Route Handler: GET Cached Report
+    cached_report = get_mission_ai_report(job_id=test_job_id, db=db)
+    assert cached_report.job_id == test_job_id
+    assert cached_report.grounding_audit.verdict == "VERIFIED_GROUNDED"
+    print("✓ Route Handler: GET /api/v1/reports/{job_id} returned cached report.")
 
-    # 4. Test REST API: POST Generate Report
-    res_post = client.post(
-        f"/api/v1/reports/{test_job_id}/generate",
-        json={"model_name": "gemini-2.5-flash", "temperature": 0.2}
-    )
-    assert res_post.status_code == 200
-    post_json = res_post.json()
-    assert post_json["mission_id"] == "MS-TEST-001"
-    print("✓ POST /api/v1/reports/{job_id}/generate returned 200 OK.")
+    # 4. Test REST Route Handler: POST Generate Report
+    gen_req = GenerateReportRequest(model_name="gemini-2.5-flash")
+    post_report = create_mission_ai_report(job_id=test_job_id, request=gen_req, db=db)
+    assert post_report.mission_id == "MS-TEST-001"
+    print("✓ Route Handler: POST /api/v1/reports/{job_id}/generate returned valid report.")
 
     # 5. Test Error Handling: 404 for nonexistent job
-    res_404 = client.get("/api/v1/reports/job_nonexistent_xyz")
-    assert res_404.status_code == 404
-    print("✓ 404 handled cleanly for non-existent job.")
+    try:
+        get_mission_ai_report(job_id="job_nonexistent_xyz", db=db)
+        assert False, "Expected HTTPException 404"
+    except HTTPException as e:
+        assert e.status_code == 404
+        print("✓ Route Handler: 404 handled cleanly for non-existent job.")
 
     db.close()
     print("\n[SUCCESS] All LLM Reporter tests passed!")

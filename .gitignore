@@ -63,6 +63,10 @@ yarn-error.log*
 *.db
 *.sqlite3
 qdrant_storage/
+data/qdrant/
+data/qdrant_db/
+data/qdrant_test/
+scratch/
 
 # IDE & OS Files
 .vscode/

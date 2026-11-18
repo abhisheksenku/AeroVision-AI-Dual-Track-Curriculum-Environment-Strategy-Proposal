@@ -4,7 +4,14 @@
  */
 
 import axios from 'axios';
-import type { SystemHealth, JobResponse, MissionAnalytics, MissionComplianceReport } from '../types';
+import type {
+  SystemHealth,
+  JobResponse,
+  MissionAnalytics,
+  MissionComplianceReport,
+  MissionRAGContextResponse,
+  RAGSearchResponse
+} from '../types';
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
@@ -86,6 +93,26 @@ export const api = {
    */
   async getAiReport(jobId: string): Promise<MissionComplianceReport> {
     const res = await client.get<MissionComplianceReport>(`/reports/${jobId}`);
+    return res.data;
+  },
+
+  /**
+   * Retrieve RAG regulatory context for a mission's infractions
+   */
+  async getRAGContext(jobId: string): Promise<MissionRAGContextResponse> {
+    const res = await client.get<MissionRAGContextResponse>(`/rag/context/${jobId}`);
+    return res.data;
+  },
+
+  /**
+   * Perform direct semantic vector query against Qdrant regulatory database
+   */
+  async searchRegulations(query: string, topK = 3, category?: string): Promise<RAGSearchResponse> {
+    const res = await client.post<RAGSearchResponse>('/rag/search', {
+      query,
+      top_k: topK,
+      category,
+    });
     return res.data;
   },
 

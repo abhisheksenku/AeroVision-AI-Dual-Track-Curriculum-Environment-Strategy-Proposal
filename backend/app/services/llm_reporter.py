@@ -18,6 +18,7 @@ from backend.app.schemas.report import (
     IncidentDetail,
     GroundingAuditResult
 )
+from backend.app.services.rag_service import get_rag_service
 
 try:
     from google import genai
@@ -167,9 +168,17 @@ def generate_mission_compliance_report(
             print(f"[WARN] Gemini live generation failed, falling back to deterministic reporter: {e}")
             report_dict = None
 
+    # Augment violations with Qdrant legal statutory citations
+    rag_svc = get_rag_service()
+    augmented_infractions = rag_svc.augment_violations(violations)
+    citation_map = {
+        (inf.track_id, inf.rule_type): [c.statute_code for c in inf.citations]
+        for inf in augmented_infractions
+    }
+
     # Deterministic Grounded Generator (fallback when offline or key missing)
     if not report_dict:
-        used_model = f"{model_name} (Deterministic Engine)"
+        used_model = f"{model_name} (Deterministic Engine + RAG)"
         threat_level = "CRITICAL" if any(v.severity == "CRITICAL" for v in violations) else (
             "ELEVATED" if len(violations) > 0 else "LOW"
         )
@@ -180,7 +189,8 @@ def generate_mission_compliance_report(
                 "class_name": v.class_name,
                 "rule_type": v.rule_type,
                 "severity": v.severity,
-                "narrative": f"Vehicle #{v.track_id} ({v.class_name}) triggered {v.rule_type} at t={v.timestamp_sec:.1f}s: {v.details}"
+                "narrative": f"Vehicle #{v.track_id} ({v.class_name}) triggered {v.rule_type} at t={v.timestamp_sec:.1f}s: {v.details}",
+                "statutory_citations": citation_map.get((v.track_id, v.rule_type), [])
             }
             for v in violations
         ]
@@ -220,7 +230,8 @@ def generate_mission_compliance_report(
             class_name=inc["class_name"],
             rule_type=inc["rule_type"],
             severity=inc["severity"],
-            narrative=inc["narrative"]
+            narrative=inc["narrative"],
+            statutory_citations=inc.get("statutory_citations", citation_map.get((inc["track_id"], inc["rule_type"]), []))
         )
         for inc in report_dict.get("incidents", [])
     ]
