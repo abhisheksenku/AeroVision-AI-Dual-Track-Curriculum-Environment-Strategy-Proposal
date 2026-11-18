@@ -12,7 +12,10 @@ import type {
   MissionRAGContextResponse,
   RAGSearchResponse,
   AutonomousResponseResult,
-  AgentChatResponse
+  AgentChatResponse,
+  MLOpsSystemStatus,
+  ModelExportResponse,
+  DriftAuditResponse
 } from '../types';
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -133,6 +136,37 @@ export const api = {
     const res = await client.post<AgentChatResponse>('/agents/chat', {
       message,
       job_id: jobId,
+    });
+    return res.data;
+  },
+
+  /**
+   * MLOps: Get container status, ONNX execution provider, and export registry
+   */
+  async getMlopsStatus(): Promise<MLOpsSystemStatus> {
+    const res = await client.get<MLOpsSystemStatus>('/mlops/status');
+    return res.data;
+  },
+
+  /**
+   * MLOps: Trigger ONNX model export and optimization
+   */
+  async triggerModelExport(modelName = 'drone_backbone'): Promise<ModelExportResponse> {
+    const res = await client.post<ModelExportResponse>('/mlops/export', {
+      model_name: modelName,
+      target_format: 'ONNX',
+      dynamic_batch: true,
+    });
+    return res.data;
+  },
+
+  /**
+   * MLOps: Audit telemetry covariate drift via Population Stability Index (PSI)
+   */
+  async auditDrift(batchSpeeds: number[]): Promise<DriftAuditResponse> {
+    const res = await client.post<DriftAuditResponse>('/mlops/drift-audit', {
+      batch_speeds: batchSpeeds,
+      num_bins: 10,
     });
     return res.data;
   },

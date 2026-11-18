@@ -9,6 +9,7 @@ import { JobHistorySelector } from './components/JobHistorySelector';
 import { AiReportCard } from './components/AiReportCard';
 import { RegulatoryCitationsCard } from './components/RegulatoryCitationsCard';
 import { AgentCommanderConsole } from './components/AgentCommanderConsole';
+import { MlopsDeploymentCard } from './components/MlopsDeploymentCard';
 import { api } from './services/api';
 import type { JobResponse, MissionAnalytics, MissionComplianceReport } from './types';
 import { ShieldCheck, Video, Activity, Sparkles, BarChart2 } from 'lucide-react';
@@ -231,11 +232,22 @@ export default function App() {
             <ViolationsTable violations={analytics.safety_audit.violations_log || []} />
           </div>
         )}
+
+        {/* Section 8: MLOps, ONNX Acceleration & Production Deployment */}
+        <div className="pt-2">
+          <MlopsDeploymentCard
+            speedsSample={
+              analytics
+                ? Object.values(analytics.class_statistics).map((s) => s.mean_speed_kmh)
+                : []
+            }
+          />
+        </div>
       </main>
 
       {/* Footer */}
       <footer className="border-t border-slate-800 py-4 px-6 text-center text-xs text-slate-500 bg-slate-950/80">
-        AeroVision AI &copy; 2026 &bull; Production Video Intelligence Platform &bull; Phase 12 Autonomous Agents Verified
+        AeroVision AI &copy; 2026 &bull; Production Video Intelligence Platform &bull; Phase 13 MLOps &amp; Deployment Complete
       </footer>
     </div>
   );

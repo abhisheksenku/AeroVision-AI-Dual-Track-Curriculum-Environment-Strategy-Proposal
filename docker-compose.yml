@@ -1,0 +1,43 @@
+# =============================================================================
+# AeroVision AI - Production Multi-Container Compose Architecture
+# =============================================================================
+
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: aerovision-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PORT=8000
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - QDRANT_STORAGE_PATH=data/qdrant_db
+    volumes:
+      - ./data/uploads:/app/data/uploads
+      - ./data/processed:/app/data/processed
+      - ./data/qdrant_db:/app/data/qdrant_db
+    networks:
+      - aerovision-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: aerovision-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - aerovision-network
+
+networks:
+  aerovision-network:
+    driver: bridge

@@ -1,0 +1,39 @@
+# AeroVision AI - Docker Build Context Exclusions
+
+# Environments
+.venv/
+.venv_tf/
+.venv*/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node.js
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Git & IDEs
+.git/
+.github/
+.vscode/
+.idea/
+
+# Testing & Scratch
+scratch/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local Media (mounted via volumes)
+data/uploads/*
+!data/uploads/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/qdrant_db/*
+!data/qdrant_db/.gitkeep
+
+# Environment secrets
+.env
+.env.local

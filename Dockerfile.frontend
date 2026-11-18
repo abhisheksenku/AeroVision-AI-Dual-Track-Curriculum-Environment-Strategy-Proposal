@@ -1,0 +1,39 @@
+# =============================================================================
+# AeroVision AI - Production Multi-Stage Frontend Dockerfile
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Stage 1: Build & Vite Production Bundle
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Cache package installation layers
+COPY frontend/package*.json ./
+RUN npm ci
+
+# Copy source and build static artifacts
+COPY frontend/ ./
+RUN npm run build
+
+# -----------------------------------------------------------------------------
+# Stage 2: Hardened Nginx Web Server Image
+# -----------------------------------------------------------------------------
+FROM nginx:1.27-alpine AS runtime
+
+# Remove default static pages
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copy built production bundle from builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy reverse proxy configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+    CMD wget -q -O - http://localhost/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

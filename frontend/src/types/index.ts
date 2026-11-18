@@ -173,3 +173,30 @@ export interface AgentChatResponse {
   tools_invoked: string[];
   data_grounding: Record<string, unknown>;
 }
+
+export interface MLOpsSystemStatus {
+  status: 'OPERATIONAL' | 'DEGRADED';
+  onnx_runtime_available: boolean;
+  active_execution_provider: string;
+  quantization_supported: boolean;
+  docker_container_ready: boolean;
+  exported_models: string[];
+  cicd_gates_verified: boolean;
+}
+
+export interface ModelExportResponse {
+  status: 'SUCCESS' | 'FAILED';
+  format: string;
+  export_path: string;
+  file_size_kb: number;
+  exported_at: string;
+}
+
+export interface DriftAuditResponse {
+  psi_score: number;
+  verdict: 'NO_DRIFT' | 'MODERATE_DRIFT' | 'CRITICAL_DRIFT';
+  recommendation: string;
+  baseline_mean_speed_kmh: number;
+  observed_mean_speed_kmh: number;
+  num_samples_evaluated: number;
+}

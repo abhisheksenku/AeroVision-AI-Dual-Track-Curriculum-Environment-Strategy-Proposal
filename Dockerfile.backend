@@ -1,0 +1,62 @@
+# =============================================================================
+# AeroVision AI - Production Multi-Stage Backend Dockerfile
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Stage 1: Build & Python Dependency Wheel Cache
+# -----------------------------------------------------------------------------
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+# Install compilation prerequisites
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# -----------------------------------------------------------------------------
+# Stage 2: Hardened Production Runtime Image
+# -----------------------------------------------------------------------------
+FROM python:3.11-slim AS runtime
+
+# Install native shared libraries for OpenCV and runtime health probes
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libglib2.0-0 \
+    libgl1 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Security: Create non-root unprivileged service account
+RUN groupadd -g 1000 appgroup && \
+    useradd -u 1000 -g appgroup -m -s /bin/bash appuser
+
+WORKDIR /app
+
+# Copy installed Python packages from builder stage
+COPY --from=builder /root/.local /home/appuser/.local
+ENV PATH=/home/appuser/.local/bin:$PATH
+ENV PYTHONUNBUFFERED=1
+ENV PORT=8000
+
+# Copy application directories with proper ownership
+COPY --chown=appuser:appgroup backend /app/backend
+COPY --chown=appuser:appgroup data/regulations /app/data/regulations
+COPY --chown=appuser:appgroup models/weights /app/models/weights
+
+# Pre-create data directories and grant volume write access
+RUN mkdir -p /app/data/uploads /app/data/processed /app/data/qdrant_db && \
+    chown -R appuser:appgroup /app/data
+
+USER appuser
+
+EXPOSE 8000
+
+# Container healthcheck probe against FastAPI /health endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:8000/api/v1/health || exit 1
+
+CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
